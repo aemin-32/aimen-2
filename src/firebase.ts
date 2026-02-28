@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // هذا السطر ضروري لحل الخطأ
+import { getFirestore } from "firebase/firestore"; // ضروري للـ usePersistence
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0c3B26bYXRbivPteHUOWdesQ1lx44BQI",
@@ -19,7 +19,7 @@ export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// تعريف قاعدة البيانات وتصديرها
+// تصدير قاعدة البيانات لحل مشكلة الـ Build
 export const db = getFirestore(app); 
 
 export const signInWithGoogle = async () => {
