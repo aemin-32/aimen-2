@@ -5,7 +5,7 @@ import { InjectionPayload, Difficulty, Stat, DailyMode } from '../types/types';
 export const PACK_MONK: InjectionPayload = {
     meta: {
         packName: "Monk Mode Protocol",
-        author: "LifeOS Architect"
+        author: "Ascension Architect"
     },
     habits: [
         { title: "05:00 AM Rising", difficulty: "hard", stat: "DIS", type: "daily", description: "Wake up before the enemy." },

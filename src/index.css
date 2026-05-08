@@ -53,6 +53,11 @@ body[data-animation='fast'] * {
   animation-duration: 0.2s !important;
 }
 
+body[data-ascending='true'] * {
+  animation-duration: 0.25s !important;
+  transition-duration: 0.15s !important;
+}
+
 body[data-animation='none'] * {
   transition: none !important;
   animation: none !important;
@@ -163,4 +168,14 @@ body[data-animation='none'] .card,
 body[data-animation='none'] .modal {
     transition: none;
     animation: none;
+}
+
+/* ⚡ ZEUS AVATAR STYLES */
+.avatar-zeus {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #FFFF00;
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
 }

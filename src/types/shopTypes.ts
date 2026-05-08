@@ -15,7 +15,8 @@ export interface StoreItem {
   description: string;
   cost: number;
   icon: string; // Identifier for icon component
-  type: 'system' | 'custom' | 'artifact' | 'redemption'; // 👈 NEW: Redemption Type
+  type: 'system' | 'custom' | 'artifact' | 'redemption' | 'avatar' | 'cosmetic';
+  slot?: 'head' | 'body' | 'aura' | 'accessory'; // 👈 NEW: Avatar Slot
   isInfinite: boolean; // True = Always available, False = One-time buy (disappears)
   effect?: ItemEffect; // 👈 NEW: Passive Bonus
 }

@@ -10,7 +10,7 @@ export const downloadSourceCode = async () => {
         const blob = await response.blob();
         
         // Save the blob as a zip file
-        saveAs(blob, 'lifeos-source.zip');
+        saveAs(blob, 'ascension-source.zip');
     } catch (error) {
         console.error("Failed to download source:", error);
         alert("Failed to download source code. Please try again.");

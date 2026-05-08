@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
-import { LifeOSState } from '../types/types';
+import { AscensionState } from '../types/types';
 
 export const useNativeBack = (
-    state: LifeOSState, 
-    setState: React.Dispatch<React.SetStateAction<LifeOSState>>
+    state: AscensionState, 
+    setState: React.Dispatch<React.SetStateAction<AscensionState>>
 ) => {
     // 🔄 REF TO TRACK STATE INSIDE LISTENERS
     const stateRef = useRef(state);

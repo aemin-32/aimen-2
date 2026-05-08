@@ -1,5 +1,5 @@
 
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useSkills } from '../../contexts/SkillContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
@@ -11,7 +11,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 
 export const useOracle = () => {
-    const { state: lifeState, dispatch } = useLifeOS();
+    const { state: lifeState, dispatch } = useAscension();
     const { skillState } = useSkills();
     const { taskState } = useTasks();
     const { habitState } = useHabits();

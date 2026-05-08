@@ -13,15 +13,21 @@ export const DIFFICULTY_BG = {
   [Difficulty.HARD]: 'bg-life-hard/10',
 };
 
+export const DIFFICULTY_HEX = {
+  [Difficulty.EASY]: '#4ADE80',
+  [Difficulty.NORMAL]: '#3B82F6',
+  [Difficulty.HARD]: '#EF4444',
+};
+
 export const STAT_COLORS = {
-  [Stat.STR]: '#ef4444', // Red
-  [Stat.INT]: '#a855f7', // Purple
-  [Stat.DIS]: '#60a5fa', // Blue
-  [Stat.HEA]: '#10b981', // Emerald
-  [Stat.CRT]: '#e879f9', // Fuchsia
-  [Stat.SPR]: '#f43f5e', // Rose
-  [Stat.REL]: '#fbbf24', // Amber
-  [Stat.FIN]: '#14b8a6', // Teal
+  [Stat.STR]: '#FF003C', // Neon Red
+  [Stat.INT]: '#BC13FE', // Neon Purple
+  [Stat.DIS]: '#00FFFF', // Neon Blue
+  [Stat.HEA]: '#39FF14', // Neon Green
+  [Stat.CRT]: '#FF00FF', // Neon Magenta
+  [Stat.SPR]: '#FF003C', // Reuse Red for Spirit or find another
+  [Stat.REL]: '#00FF9F', // Neon Teal
+  [Stat.FIN]: '#FFD700', // Neon Gold
 };
 
 // 🆕 DAILY TARGETS (Survival Modes)

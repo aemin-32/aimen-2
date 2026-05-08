@@ -230,3 +230,144 @@ export const playSound = async (type: SoundType, enabled: boolean = true) => {
             break;
     }
 };
+
+export const playMonkSound = async (tier: 'silver' | 'gold' | 'diamond' | 'crimson') => {
+    const ctx = getContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const now = ctx.currentTime;
+
+    switch (tier) {
+        case 'silver':
+            // A single, clean chime
+            playTone(ctx, 880, 'sine', now, 1.5, 0.1);
+            break;
+        case 'gold':
+            // A shimmering, harmonic swell
+            [440, 554.37, 659.25, 880].forEach((freq, i) => {
+                playTone(ctx, freq, 'sine', now + (i * 0.1), 2, 0.05);
+            });
+            break;
+        case 'diamond':
+            // High frequency crystal vibration
+            for (let i = 0; i < 5; i++) {
+                playTone(ctx, 2000 + (i * 500), 'sine', now + (i * 0.05), 0.5, 0.02);
+            }
+            break;
+        case 'crimson':
+            // Deep "Om" chant (simulated with low sawtooth and sine)
+            const duration = 4;
+            const baseFreq = 65.41; // C2
+            
+            // Low drone
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(baseFreq, now);
+            gain1.gain.setValueAtTime(0, now);
+            gain1.gain.linearRampToValueAtTime(0.1, now + 0.5);
+            gain1.gain.linearRampToValueAtTime(0, now + duration);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + duration);
+
+            // Resonant sine
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(baseFreq * 1.5, now); // Perfect fifth
+            gain2.gain.setValueAtTime(0, now);
+            gain2.gain.linearRampToValueAtTime(0.05, now + 1);
+            gain2.gain.linearRampToValueAtTime(0, now + duration);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now);
+            osc2.stop(now + duration);
+            
+            // Crackle/Lightning (noise)
+            const bufferSize = ctx.sampleRate * 2;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0, now);
+            // Random bursts
+            for (let t = 0; t < duration; t += 0.2) {
+                noiseGain.gain.setValueAtTime(Math.random() * 0.02, now + t);
+                noiseGain.gain.linearRampToValueAtTime(0, now + t + 0.05);
+            }
+            noise.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            noise.start(now);
+            noise.stop(now + duration);
+            break;
+    }
+};
+
+export const playTitanSound = async (tier: 'silver' | 'gold' | 'diamond' | 'crimson') => {
+    const ctx = getContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const now = ctx.currentTime;
+
+    switch (tier) {
+        case 'silver':
+            // Heavy metallic thud
+            playTone(ctx, 100, 'sawtooth', now, 0.5, 0.2);
+            playTone(ctx, 50, 'sine', now, 0.8, 0.3);
+            break;
+        case 'gold':
+            // Resonant anvil strike
+            playTone(ctx, 440, 'triangle', now, 0.1, 0.2);
+            playTone(ctx, 220, 'sawtooth', now, 1.5, 0.1);
+            playTone(ctx, 55, 'sine', now, 2, 0.4);
+            break;
+        case 'diamond':
+            // High-tension crystalline strain + release
+            for (let i = 0; i < 3; i++) {
+                playTone(ctx, 1000 + i * 200, 'sine', now + i * 0.05, 0.2, 0.05);
+            }
+            playTone(ctx, 80, 'sawtooth', now + 0.2, 1, 0.3);
+            break;
+        case 'crimson':
+            // Earth-shaking roar/rumble (God of War style)
+            const duration = 3;
+            const baseFreq = 40;
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, now + duration);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+            gain.gain.linearRampToValueAtTime(0, now + duration);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration);
+
+            // Add some noise for "grit"
+            const bufferSize = ctx.sampleRate * duration;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.05, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            noise.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            noise.start(now);
+            noise.stop(now + duration);
+            break;
+    }
+};

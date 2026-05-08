@@ -87,12 +87,12 @@ export const handleSignoutClick = () => {
 
 // --- SYNC LOGIC ---
 
-export const createLifeOSCalendar = async () => {
+export const createAscensionCalendar = async () => {
   try {
     const response = await window.gapi.client.calendar.calendars.insert({
       resource: {
-        summary: 'LifeOS Protocol',
-        description: 'Synced tasks and habits from LifeOS.',
+        summary: 'Ascension Protocol',
+        description: 'Synced tasks and habits from Ascension.',
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
       }
     });
@@ -103,11 +103,11 @@ export const createLifeOSCalendar = async () => {
   }
 };
 
-export const findLifeOSCalendar = async () => {
+export const findAscensionCalendar = async () => {
   try {
     const response = await window.gapi.client.calendar.calendarList.list();
     const calendars = response.result.items;
-    const lifeCal = calendars.find((c: any) => c.summary === 'LifeOS Protocol');
+    const lifeCal = calendars.find((c: any) => c.summary === 'Ascension Protocol');
     return lifeCal ? lifeCal.id : null;
   } catch (err) {
     console.error('Error listing calendars', err);

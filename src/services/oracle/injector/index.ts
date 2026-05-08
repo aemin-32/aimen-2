@@ -80,7 +80,7 @@ const securePayload = (payload: any): InjectionPayload => {
 
 /**
  * 🏭 THE INJECTION ENGINE (MODULAR V2)
- * Parses JSON from "The Godfather" (AI) and injects it into the LifeOS state.
+ * Parses JSON from "The Godfather" (AI) and injects it into the Ascension state.
  */
 export const processInjection = (jsonInput: string, dispatchers: Dispatchers, raidState?: any): InjectionResult => {
     const { lifeDispatch } = dispatchers;

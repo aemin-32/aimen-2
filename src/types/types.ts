@@ -37,6 +37,14 @@ export enum Stat {
 }
 
 // 🎨 MODULE 20: THEME ENGINE
+export interface ProfileCosmetics {
+    borderId?: string;
+    backgroundId?: string;
+    titlePrefixId?: string;
+    avatarFrameId?: string;
+    glitchEffect?: boolean;
+}
+
 export interface Theme {
     id: string;
     name: string;
@@ -60,8 +68,11 @@ export interface UserMetrics {
     totalXPEarned: number;
     highestStreak: number;
     habitsFixed: number; 
+    habitsByDifficulty: { [key in Difficulty]: number }; // 👈 NEW
     shieldsUsed: number;
     resetsCount: number; 
+    lawsBroken: number; // 👈 NEW
+    campaignsCompleted: number; // 👈 NEW
 }
 
 // 🏛️ MODULE 05: USER PROFILE
@@ -73,15 +84,19 @@ export interface UserProfile {
   targetXP: number;
   gold: number;
   
-  // ⚖️ HONOR SYSTEM V2 (Average Calculation)
-  honor: number; // The Calculated Monthly Average (0-100%)
-  honorDailyLog: Record<string, number>; // Key: YYYY-MM-DD, Value: Score (Starts at 100)
-
   streak: number;
-  shields: number;
+  shields: {
+    easy: number;
+    normal: number;
+    hard: number;
+  };
   inventory: string[]; 
   
   equippedItems: string[]; // 👈 NEW: IDs of equipped artifacts (Max 3)
+  equippedAvatarParts: Record<string, string>; // 👈 NEW: Slot ID -> Item ID
+
+  avatarId: string; // 👈 NEW: Current Avatar ID
+  unlockedAvatars: string[]; // 👈 NEW: List of unlocked Avatar IDs
 
   hasOnboarded: boolean; 
 
@@ -94,16 +109,20 @@ export interface UserProfile {
   pendingMode: DailyMode;   // Tomorrow's difficulty (Crystal Ball Logic)
   lastProcessedDate: string; // ISO Date of the last "Guillotine" check
   consecutiveShields: number; // 🆕 Track consecutive shield usage (Max 3)
+  campaignBonus: number;      // 🆕 Active XP bonus from campaign streaks (e.g. 0.05)
   
   // 🗓️ STREAK HISTORY (New)
   // Key: YYYY-MM-DD, Value: 'success' | 'shield' | 'fail' | 'frozen'
   streakHistory: Record<string, 'success' | 'shield' | 'fail' | 'frozen'>;
+  restDays: string[]; // 👈 NEW: Array of ISO Date Strings (YYYY-MM-DD)
 
   // 🏅 BADGE SYSTEM INTEGRATION
   badges: string[]; 
   badgeTiers: Record<string, 'silver' | 'gold' | 'diamond' | 'crimson'>;
   badgeHistory: Record<string, Record<string, string>>; 
   featuredBadges: string[]; 
+
+  profileCosmetics: ProfileCosmetics; // 👈 NEW: Visual customizations
 
   metrics: UserMetrics; 
 
@@ -165,7 +184,7 @@ export type ModalType =
     | 'quickSubtask' 
     | 'dataExchange'
     | 'login' // 👈 NEW
-    | 'honorBreakdown'
+    | 'characterSheet' // 👈 NEW
     | 'questForge'
     | 'habitProtocol'
     | 'economyProtocol'
@@ -174,6 +193,7 @@ export type ModalType =
     | 'shopProtocol'
     | 'codexArbiter'
     | 'badgeProtocol'
+    | 'missionBriefing'
     | 'guidesMenu'; // 👈 NEW: Guides Menu Modal
 
 export interface LootPayload {
@@ -216,9 +236,14 @@ export interface UIState {
     habitsViewMode: 'list' | 'calendar';
     tasksViewMode: 'missions' | 'codex'; // 👈 NEW: Toggle for Tasks View
     customAudio?: CustomAudio;
+    systemAscending: {
+        isActive: boolean;
+        activationTime: string | null;
+        recentCompletions: { timestamp: string; points: number }[]; 
+    };
 }
 
-export interface LifeOSState {
+export interface AscensionState {
     user: UserProfile;
     badgesRegistry: BadgeDefinition[];
     ui: UIState;

@@ -57,4 +57,8 @@ export interface Habit {
   // ⏰ SCHEDULING & REMINDERS
   scheduledTime?: string; 
   reminders?: Reminder[]; 
+
+  // 📝 NARRATIVE LAYER (New)
+  stakes?: string; 
+  notes?: string;
 }

@@ -4,7 +4,7 @@ import App from './App';
 import './index.css';
 
 // --- استيراد المزودات (Providers) يدوياً ---
-import { LifeOSProvider } from './contexts/LifeOSContext';
+import { AscensionProvider } from './contexts/AscensionContext';
 import { SkillProvider } from './contexts/SkillContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { HabitProvider } from './contexts/HabitContext';
@@ -18,26 +18,26 @@ import ErrorBoundary from './components/ErrorBoundary'; // 👈 IMPORT
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      {/* ترتيب المزودات مهم: LifeOS هو الأساس */}
-      <LifeOSProvider>
+      {/* ترتيب المزودات مهم: Ascension هو الأساس */}
+      <AscensionProvider>
         <SkillProvider>
-          <TaskProvider>
-            <HabitProvider>
-              <RaidProvider>
+          <HabitProvider>
+            <RaidProvider>
+              <TaskProvider>
                 <ShopProvider>
                   <CampaignProvider>
                     <BadgeProvider>
-                      <CalendarProvider> {/* 👈 WRAP */}
+                      <CalendarProvider>
                         <App />
                       </CalendarProvider>
                     </BadgeProvider>
                   </CampaignProvider>
                 </ShopProvider>
-              </RaidProvider>
-            </HabitProvider>
-          </TaskProvider>
+              </TaskProvider>
+            </RaidProvider>
+          </HabitProvider>
         </SkillProvider>
-      </LifeOSProvider>
+      </AscensionProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 )

@@ -9,8 +9,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
  * 2. Alert Channel: High Importance, Sound, Vibration (The Wake-up Call).
  */
 
-const CHANNEL_DASHBOARD = 'lifeos_dashboard_channel';
-const CHANNEL_ALERTS = 'lifeos_alerts_channel';
+const CHANNEL_DASHBOARD = 'ascension_dashboard_channel';
+const CHANNEL_ALERTS = 'ascension_alerts_channel';
 
 // 🛠️ SETUP CHANNELS
 export const registerNotificationChannels = async () => {
@@ -20,7 +20,7 @@ export const registerNotificationChannels = async () => {
             // Importance: LOW (2) ensures it shows but doesn't make sound/popup
             await LocalNotifications.createChannel({
                 id: CHANNEL_DASHBOARD,
-                name: 'LifeOS Dashboard',
+                name: 'Ascension Dashboard',
                 description: 'Persistent Daily Summary',
                 importance: 2, 
                 visibility: 1, 

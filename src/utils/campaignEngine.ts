@@ -145,7 +145,7 @@ export const getCampaignTimeCode = (startDateIso: string | null, targetDateIso: 
  */
 export const getActiveCampaignData = () => {
     try {
-        const saved = localStorage.getItem('LIFE_OS_CAMPAIGN_DATA_V2');
+        const saved = localStorage.getItem('ASCENSION_CAMPAIGN_DATA_V2');
         if (saved) {
             const data = JSON.parse(saved);
             if (data.isActive && data.startDate) {

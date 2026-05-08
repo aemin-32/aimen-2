@@ -17,14 +17,14 @@ export const getStatIcon = (stat: Stat) => {
 
 export const getStatColor = (stat: Stat) => {
     switch (stat) {
-        case Stat.STR: return '#ef4444'; // red-500
-        case Stat.INT: return '#8b5cf6'; // violet-500
-        case Stat.DIS: return '#3b82f6'; // blue-500
-        case Stat.HEA: return '#10b981'; // emerald-500
-        case Stat.CRT: return '#ec4899'; // pink-500
-        case Stat.SPR: return '#f43f5e'; // rose-500
-        case Stat.REL: return '#fbbf24'; // amber-500
-        case Stat.FIN: return '#14b8a6'; // teal-500
-        default: return '#6b7280'; // gray-500
+        case Stat.STR: return '#FF3131'; // High-Voltage Red
+        case Stat.INT: return '#BF00FF'; // Deep Purple
+        case Stat.DIS: return '#00BFFF'; // Electric Blue
+        case Stat.HEA: return '#39FF14'; // Emerald Green
+        case Stat.CRT: return '#FF00FF'; // Neon Pink
+        case Stat.SPR: return '#FFAC1C'; // Neon Orange
+        case Stat.REL: return '#FFFF00'; // Neon Yellow
+        case Stat.FIN: return '#00FFEF'; // Neon Cyan
+        default: return '#ffffff';
     }
 };

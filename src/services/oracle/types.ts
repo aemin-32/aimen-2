@@ -102,7 +102,7 @@ export interface OracleShopItem {
 
 export interface OracleLaw {
     title: string;
-    penaltyType: 'gold' | 'xp' | 'stat' | 'honor';
+    penaltyType: 'gold' | 'xp' | 'stat';
     penaltyValue: number;
     timesBroken: number;
 }

@@ -113,7 +113,7 @@ export const generateOracleBlueprint = (
 *** SYSTEM OVERRIDE: GODFATHER PROTOCOL v3.0 ***
 
 ROLE: You are the Strategic Advisor AI.
-GOAL: Inject Plans (JSON) into the LifeOS Kernel.
+GOAL: Inject Plans (JSON) into the Ascension Kernel.
 
 --- FEATURES YOU CAN CONTROL ---
 

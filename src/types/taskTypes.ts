@@ -19,7 +19,7 @@ export interface TaskCategory {
 export interface Law {
     id: string;
     title: string;
-    penaltyType: 'gold' | 'xp' | 'stat' | 'honor'; // 👈 Added Honor
+    penaltyType: 'gold' | 'xp' | 'stat';
     penaltyValue: number;
     statTarget?: Stat; // Only used if penaltyType is 'stat'
     timesBroken: number;
@@ -33,6 +33,7 @@ export interface Task {
   stat: Stat;
   skillId?: string; 
   isCompleted: boolean;
+  completedAt?: string; // ISO Date of completion
   
   // 🆕 Step 2: Tactical Granularity
   subtasks: Subtask[]; 
@@ -50,6 +51,10 @@ export interface Task {
   // ⏰ SCHEDULING & REMINDERS (Updated)
   scheduledTime?: string; // ISO Date Time
   reminders?: Reminder[]; // 👈 Multiple reminders support
+
+  // 📝 NARRATIVE LAYER (New)
+  stakes?: string; // What happens if I fail?
+  notes?: string;  // Detailed tactical notes
 
   // 🆕 G12 MARKER
   isCampaign?: boolean; // True if part of 12 Week Year
