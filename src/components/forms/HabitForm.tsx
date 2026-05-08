@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckSquare, Dumbbell, Brain, Zap, Shield, Heart, Activity, ChevronRight, Folder, BookOpen, Bell, X, Trash2, Plus, Palette, CalendarPlus, Repeat, Minus, Flame, Users, Coins } from 'lucide-react';
+import { toRoman } from '../../utils/roman-helpers';
+import { Clock, CheckSquare, Dumbbell, Brain, Zap, Shield, Heart, Activity, ChevronRight, Folder, BookOpen, Bell, X, Trash2, Plus, Palette, CalendarPlus, Repeat, Minus, Flame, Users, Coins, Target } from 'lucide-react';
 import { useHabits } from '../../contexts/HabitContext';
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { Habit, HabitType } from '../../types/habitTypes';
 import { Difficulty, Stat } from '../../types/types';
 import { DIFFICULTY_COLORS, DIFFICULTY_BG, STAT_COLORS } from '../../types/constants';
@@ -13,16 +14,19 @@ import { HabitFrequencySection } from './parts/HabitFrequencySection';
 interface HabitFormProps {
     onClose: () => void;
     initialData?: Habit | null;
+    inheritedData?: any;
 }
 
-const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
+const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData, inheritedData }) => {
     const { habitDispatch } = useHabits();
     const { skillState } = useSkills();
-    const { state } = useLifeOS();
+    const { state } = useAscension();
     
     // Basic Info
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [stakes, setStakes] = useState('');
+    const [notes, setNotes] = useState('');
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
     const [stat, setStat] = useState<Stat>(Stat.DIS);
     const [skillId, setSkillId] = useState<string>('');
@@ -42,30 +46,61 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
     const [reminderTime, setReminderTime] = useState('');
     const [subtasks, setSubtasks] = useState<{ id: string; title: string }[]>([]);
     const [newSubtask, setNewSubtask] = useState('');
+    const [scheduledTime, setScheduledTime] = useState('');
+    const [isGoogleCalSync, setIsGoogleCalSync] = useState(false);
+
+    // 🛠️ HELPER: Format date for datetime-local input safely (Local Time)
+    const formatForInput = (dateStr: string | undefined) => {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const offset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+        } catch (e) {
+            return '';
+        }
+    };
 
     // Initialize Data (Edit Mode)
     useEffect(() => {
-        if (initialData) {
-            setTitle(initialData.title);
-            setDescription(initialData.description || '');
-            setDifficulty(initialData.difficulty);
-            setStat(initialData.stat);
-            setSkillId(initialData.skillId || '');
-            setCategoryId(initialData.categoryId || '');
-            setHabitType(initialData.type);
-            setSelectedDays(initialData.specificDays || []);
-            setDailyTarget(initialData.dailyTarget || 1);
-            setTotalRepetitions(initialData.totalRepetitions || 0);
-            setIsTimed(initialData.isTimed || false);
-            setDurationMinutes(initialData.durationMinutes || 0);
-            setSubtasks(initialData.subtasks || []);
+        const editData = initialData || (inheritedData && inheritedData.editHabit);
+
+        if (editData) {
+            setTitle(editData.title);
+            setDescription(editData.description || '');
+            setStakes(editData.stakes || '');
+            setNotes(editData.notes || '');
+            setDifficulty(editData.difficulty);
+            setStat(editData.stat);
+            setSkillId(editData.skillId || '');
+            setCategoryId(editData.categoryId || '');
+            setHabitType(editData.type);
+            setSelectedDays(editData.specificDays || []);
+            setDailyTarget(editData.dailyTarget || 1);
+            setTotalRepetitions(editData.totalRepetitions || 0);
+            setIsTimed(editData.isTimed || false);
+            setDurationMinutes(editData.durationMinutes || 0);
+            setSubtasks(editData.subtasks || []);
+            setScheduledTime(formatForInput(editData.scheduledTime));
             
             // Set Reward Type based on existing data
-            if (initialData.skillId) {
+            if (editData.skillId) {
                 setRewardType('skill');
             }
+        } else if (inheritedData && inheritedData.date) {
+            // Handle Date and Hour Inheritance from Calendar
+            const baseDate = inheritedData.date; // YYYY-MM-DD
+            
+            if (inheritedData.hour !== undefined) {
+                const hour = inheritedData.hour;
+                const hourStr = hour.toString().padStart(2, '0');
+                setScheduledTime(`${baseDate}T${hourStr}:00`);
+            } else {
+                setScheduledTime('');
+            }
         }
-    }, [initialData]);
+    }, [initialData, inheritedData]);
 
     // 🟢 REWARD TYPE TOGGLE
     const [rewardType, setRewardType] = useState<'stat' | 'skill'>('stat');
@@ -77,6 +112,8 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
         const habitData: any = {
             title,
             description,
+            stakes,
+            notes,
             difficulty,
             stat,
             skillId: rewardType === 'skill' ? (skillId || undefined) : undefined,
@@ -87,11 +124,14 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
             totalRepetitions: totalRepetitions > 0 ? totalRepetitions : undefined,
             isTimed,
             durationMinutes: isTimed ? durationMinutes : 0,
-            subtasks
+            subtasks,
+            scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : undefined
         };
 
-        if (initialData) {
-            habitDispatch.updateHabit(initialData.id, habitData);
+        const editItem = initialData || (inheritedData && inheritedData.editHabit);
+
+        if (editItem) {
+            habitDispatch.updateHabit(editItem.id, habitData);
         } else {
             habitDispatch.addHabit(habitData);
         }
@@ -185,6 +225,33 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
                     />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-[10px] text-red-500/70 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Shield size={12} /> Stakes
+                        </label>
+                        <textarea 
+                            rows={2}
+                            value={stakes}
+                            onChange={e => setStakes(e.target.value)}
+                            placeholder="Impact?"
+                            className="w-full bg-life-black border border-red-900/10 rounded-lg p-3 text-xs text-life-text placeholder:text-life-muted/30 focus:outline-none focus:border-red-500/30 transition-all resize-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] text-blue-500/70 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Target size={12} /> Notes
+                        </label>
+                        <textarea 
+                            rows={2}
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Protocol tips..."
+                            className="w-full bg-life-black border border-blue-900/10 rounded-lg p-3 text-xs text-life-text placeholder:text-life-muted/30 focus:outline-none focus:border-blue-500/30 transition-all resize-none"
+                        />
+                    </div>
+                </div>
+
                 {/* DIFFICULTY */}
                 <div>
                     <label className="block text-[10px] text-life-muted uppercase font-bold tracking-widest mb-2">Difficulty</label>
@@ -268,7 +335,7 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
                                 >
                                     <option value="">Select a Skill...</option>
                                     {skillState.skills.map(skill => (
-                                        <option key={skill.id} value={skill.id}>{skill.title} (Lvl {skill.level})</option>
+                                        <option key={skill.id} value={skill.id}>{skill.title} ({toRoman(skill.level)})</option>
                                     ))}
                                 </select>
                                 <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-life-muted rotate-90 pointer-events-none" size={14} />
@@ -308,17 +375,30 @@ const HabitForm: React.FC<HabitFormProps> = ({ onClose, initialData }) => {
 
             {/* 3. CONTEXT & LINKAGE */}
             <div className="space-y-4">
-                {/* Reminder Time */}
-                <div>
-                    <label className="block text-[10px] text-life-muted uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
-                        <Bell size={12} /> Daily Reminder
-                    </label>
-                    <input 
-                        type="time" 
-                        value={reminderTime}
-                        onChange={e => setReminderTime(e.target.value)}
-                        className="w-full bg-life-black border border-life-muted/30 rounded-lg p-2.5 text-xs text-life-text focus:outline-none focus:border-life-gold/50"
-                    />
+                {/* Deployment Sync */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] text-life-muted uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Clock size={12} /> Scheduled Start
+                        </label>
+                        <input 
+                            type="datetime-local" 
+                            value={scheduledTime}
+                            onChange={e => setScheduledTime(e.target.value)}
+                            className="w-full bg-life-black border border-life-muted/30 rounded-lg p-2.5 text-xs text-life-text focus:outline-none focus:border-life-gold/50"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] text-life-muted uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Bell size={12} /> Daily Reminder
+                        </label>
+                        <input 
+                            type="time" 
+                            value={reminderTime}
+                            onChange={e => setReminderTime(e.target.value)}
+                            className="w-full bg-life-black border border-life-muted/30 rounded-lg p-2.5 text-xs text-life-text focus:outline-none focus:border-life-gold/50"
+                        />
+                    </div>
                 </div>
 
                 {/* Subtasks */}

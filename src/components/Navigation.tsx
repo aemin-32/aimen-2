@@ -1,24 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { User, ShoppingBag, CheckSquare, Zap, Calendar, BookOpen, Plus, LayoutList, Target, Scale, Brain, LogIn } from 'lucide-react';
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { ViewState } from '../types/types';
-import { auth } from '../firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 const Navigation: React.FC = () => {
-  const { state, dispatch } = useLifeOS();
+  const { state, dispatch } = useAscension();
   const { currentView, habitsViewMode, tasksViewMode } = state.ui; 
   const { user } = state;
   const showCampaign = user.preferences.showCampaignUI;
-
-  // 🟢 AUTH STATE
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => setCurrentUser(u));
-    return () => unsubscribe();
-  }, []);
 
   // 🧠 MEMORY STATE
   // Left Button: Profile -> Skills -> Shop
@@ -118,7 +109,9 @@ const Navigation: React.FC = () => {
     <nav className="h-24 pb-6 pt-2 bg-life-black/80 backdrop-blur-xl border-t border-zinc-800 flex items-center justify-around px-4 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] relative">
       
       {/* 🟢 BUTTON 1: THE CHARACTER (Profile / Skills / Shop) */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={handleLeftClick}
         className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 relative group ${
           isLeftActive ? 'text-life-gold bg-life-gold/10 scale-105' : 'text-life-muted hover:text-life-silver'
@@ -139,10 +132,12 @@ const Navigation: React.FC = () => {
           {leftBtnMode}
         </span>
         {isLeftActive && <div className="absolute -bottom-1 w-1 h-1 bg-life-gold rounded-full" />}
-      </button>
+      </motion.button>
 
       {/* 🟢 BUTTON 2: MISSIONS (Tasks / Laws) */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={handleMissionsClick}
         className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 relative ${
           isMissionsActive ? (tasksViewMode === 'codex' ? 'text-red-500 bg-red-950/20 scale-105' : 'text-life-easy bg-life-easy/10 scale-105') : 'text-life-muted hover:text-life-silver'
@@ -162,23 +157,27 @@ const Navigation: React.FC = () => {
             {tasksViewMode === 'codex' ? 'Codex' : 'Missions'}
         </span>
         {isMissionsActive && <div className={`absolute -bottom-1 w-1 h-1 rounded-full ${tasksViewMode === 'codex' ? 'bg-red-500' : 'bg-life-easy'}`} />}
-      </button>
+      </motion.button>
 
       {/* 🔴 ACTION BUTTON (The Injector) */}
       <div className="relative -mt-12 group z-20">
         {/* Reflection/Glow Effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-life-crimson/40 blur-[30px] rounded-full pointer-events-none group-hover:bg-life-crimson/60 transition-colors duration-500 animate-pulse-slow" />
         
-        <button 
+        <motion.button 
+            whileHover={{ scale: 1.15, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
             onClick={handleAddClick}
-            className="relative w-16 h-16 bg-gradient-to-br from-life-crimson to-red-700 rounded-full shadow-[0_8px_30px_rgba(220,38,38,0.4)] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all duration-300 border-4 border-life-black ring-2 ring-life-crimson/20"
+            className="relative w-16 h-16 bg-gradient-to-br from-life-crimson to-red-700 rounded-full shadow-[0_8px_30px_rgba(220,38,38,0.4)] flex items-center justify-center text-white transition-all duration-300 border-4 border-life-black ring-2 ring-life-crimson/20"
         >
             <Plus size={32} strokeWidth={3} className="group-active:rotate-90 transition-transform duration-300 drop-shadow-md" />
-        </button>
+        </motion.button>
       </div>
 
       {/* 🟢 BUTTON 3: HABITS (List / Calendar) */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={handleHabitsClick}
         className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 relative ${
           isHabitsActive ? 'text-life-normal bg-life-normal/10 scale-105' : 'text-life-muted hover:text-life-silver'
@@ -198,10 +197,12 @@ const Navigation: React.FC = () => {
             {habitsViewMode === 'calendar' ? 'Planner' : 'Habits'}
         </span>
         {isHabitsActive && <div className="absolute -bottom-1 w-1 h-1 bg-life-normal rounded-full" />}
-      </button>
+      </motion.button>
 
       {/* 🟢 BUTTON 4: THE SHIFTER (Raids / Campaign / Oracle) */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={handleRightClick}
         className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 relative ${
           isRightActive ? 'text-life-hard bg-life-hard/10 scale-105' : 'text-life-muted hover:text-life-silver'
@@ -224,18 +225,7 @@ const Navigation: React.FC = () => {
           {currentRightIcon}
         </span>
         {isRightActive && <div className="absolute -bottom-1 w-1 h-1 bg-life-hard rounded-full" />}
-      </button>
-
-      {/* 🔐 LOGIN BUTTON (Only for Guests) */}
-      {!currentUser && (
-          <button 
-            onClick={handleLoginClick}
-            className="absolute top-[-40px] right-4 bg-life-black/80 backdrop-blur border border-life-gold/30 text-life-gold p-2 rounded-full shadow-lg animate-bounce"
-            title="Secure Link"
-          >
-              <LogIn size={16} />
-          </button>
-      )}
+      </motion.button>
 
     </nav>
   );

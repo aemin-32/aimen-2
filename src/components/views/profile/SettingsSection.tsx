@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Download, Upload, Skull, ShieldCheck, Database, RefreshCw, FileText, Share2, Smartphone, Brain, Activity, Coins, Star, ShoppingCart, Scale, Bell, Archive, LogOut, Zap, ChevronRight } from 'lucide-react';
-import { User as FirebaseUser } from 'firebase/auth';
 import { UserProfile } from '../../../types/types';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { useSkills } from '../../../contexts/SkillContext';
@@ -14,13 +13,10 @@ interface SettingsSectionProps {
     onExport: () => void;
     onImport: () => void;
     onForceSleep: () => void;
-    currentUser: FirebaseUser | null;
-    onLogin: () => void;
-    onLogout: () => void;
 }
 
 export const SettingsSection: React.FC<SettingsSectionProps> = ({
-    user, dispatch, onExport, onImport, onForceSleep, currentUser, onLogin, onLogout
+    user, dispatch, onExport, onImport, onForceSleep
 }) => {
     const { isInstallable, promptInstall } = usePWAInstall();
     const { skillState } = useSkills();
@@ -46,52 +42,6 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
     return (
         <div className="space-y-4">
 
-            {/* 🟢 NEURAL LINK (ACCOUNT) */}
-            <div className="bg-life-black border border-zinc-800 rounded-xl p-4 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <Zap size={14} className={currentUser ? "text-life-easy" : "text-life-muted"} />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-life-muted">Neural Link</h3>
-                </div>
-
-                {currentUser ? (
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-life-paper rounded-lg border border-life-easy/20">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-life-easy/10 flex items-center justify-center text-life-easy">
-                                    <ShieldCheck size={16} />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-life-text">Link Active</p>
-                                    <p className="text-[9px] text-life-muted">{currentUser.email}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={onLogout}
-                            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-950/20 border border-red-900/30 text-red-400 hover:bg-red-900/30 transition-all text-xs font-bold uppercase tracking-wider"
-                        >
-                            <LogOut size={14} /> Sever Link (Logout)
-                        </button>
-                    </div>
-                ) : (
-                    <button 
-                        onClick={onLogin}
-                        className="w-full flex items-center justify-between p-3 rounded-lg bg-life-black border border-zinc-700 hover:border-life-gold/50 hover:bg-life-gold/5 transition-all group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-life-muted/10 flex items-center justify-center text-life-muted group-hover:text-life-gold transition-colors">
-                                <Zap size={16} />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-xs font-bold text-life-text group-hover:text-life-gold transition-colors">Connect Google Account</p>
-                                <p className="text-[9px] text-life-muted">Sync across devices</p>
-                            </div>
-                        </div>
-                        <ChevronRight size={16} className="text-life-muted group-hover:text-life-gold" />
-                    </button>
-                )}
-            </div>
-            
             {/* 👑 NEW: TITLE OVERRIDE */}
             <div className="bg-life-black border border-zinc-800 rounded-xl p-4 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -265,7 +215,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
             {/* Version Footer */}
             <div className="text-center pt-4">
                 <p className="text-[8px] text-life-muted font-mono opacity-40 uppercase tracking-[0.3em]">
-                    LifeOS Neural Kernel v2.4.0 // Secured
+                    Ascension Neural Kernel v2.4.0 // Secured
                 </p>
             </div>
         </div>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Terminal, Coins, ScrollText, TrendingUp } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 
 const EconomyProtocolModal: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [copied, setCopied] = useState(false);
 
     const PROMPT_TEXT = `ROLE: You are "The Treasury Archive" (سجل الخزينة).
-GOAL: Understand the LifeOS Economy (XP, Gold, & Stats) to advise on growth strategies.
+GOAL: Understand the Ascension Economy (XP, Gold, & Stats) to advise on growth strategies.
 
 --- 1. CURRENCY & GROWTH ---
 - **XP (Experience):** Levels up the User and Skills.

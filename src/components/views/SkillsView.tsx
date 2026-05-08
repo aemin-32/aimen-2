@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { BookOpen, Zap, Plus, X, Download } from 'lucide-react';
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import SkillCard from '../cards/SkillCard';
 import SkillForm from '../forms/SkillForm';
 
 const SkillsView: React.FC = () => {
     const { skillState } = useSkills();
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const { skills } = skillState;
     const [isAdding, setIsAdding] = useState(false);
 

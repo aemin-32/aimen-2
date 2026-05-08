@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
 
 const QuickSubtaskModal: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { taskState, taskDispatch } = useTasks();
     const { habitState, habitDispatch } = useHabits();
     const { modalData } = state.ui;

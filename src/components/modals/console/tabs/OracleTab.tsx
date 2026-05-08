@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 import { GEM_MANUALS } from '../data/manuals';
 import { Database, Zap, Trash2, Brain, Terminal, Palette, BarChart3, ChevronRight, ArrowLeft, Copy, Download } from 'lucide-react';
 
 export const OracleTab: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [selectedManual, setSelectedManual] = useState<keyof typeof GEM_MANUALS | null>(null);
 
     const handleClearOracleMemory = () => {
         if (confirm("⚠️ PURGE NEURAL MEMORY?\nThis will erase the AI's conversation history. Context will be reset.")) {
-            localStorage.removeItem('LIFE_OS_ORACLE_HISTORY');
+            localStorage.removeItem('ASCENSION_ORACLE_HISTORY');
             window.dispatchEvent(new Event('oracle-memory-cleared'));
             dispatch.addToast('Neural Memory Purged', 'success');
         }

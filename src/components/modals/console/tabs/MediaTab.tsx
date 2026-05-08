@@ -1,9 +1,9 @@
 import React from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 import { Music, Upload } from 'lucide-react';
 
 export const MediaTab: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
 
     const handleCustomAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLifeOS } from '../../../contexts/LifeOSContext';
+import { useAscension } from '../../../contexts/AscensionContext';
 
 export type NoiseType = 'none' | 'brown' | 'rain' | 'clock' | 'custom';
 
 export const useFocusAudio = (noiseType: NoiseType, focusSessionActive: boolean) => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const audioCtxRef = useRef<AudioContext | null>(null);
     const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);

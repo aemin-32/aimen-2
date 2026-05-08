@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Shield, Flame, Award, Settings } from 'lucide-react';
+import { User, Shield, Flame, Settings } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // --- تصحيح المسارات (الرجوع خطوة واحدة ../ والدخول للمجلدات الصحيحة) ---
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { useSkills } from '../contexts/SkillContext';
 import { playSound } from '../utils/audio';
+import { EnergyRing } from './ui/EnergyRing';
 
 const Header: React.FC = () => {
-  const { state, dispatch } = useLifeOS();
+  const { state, dispatch } = useAscension();
   const { user } = state;
   const { skillState } = useSkills(); 
 
@@ -25,6 +27,10 @@ const Header: React.FC = () => {
       displayTitle = `${linkedSkill.rank} ${linkedSkill.title}`;
   } else {
       displayTitle = user.title; // Fallback to user title
+      // Auto-evolve Ignite rank at Level 5
+      if (displayTitle.toLowerCase() === 'initiate' && user.level >= 5) {
+          displayTitle = 'Operative';
+      }
   }
 
   const xpPercentage = Math.min(100, (user.currentXP / user.targetXP) * 100);
@@ -65,105 +71,141 @@ const Header: React.FC = () => {
       }
   };
 
-  const openHonorBreakdown = () => {
-      playSound('click', true);
-      dispatch.setModal('honorBreakdown');
-  };
+  const isAscending = state.ui.systemAscending.isActive;
 
   return (
     <header className="h-16 px-4 border-b border-zinc-800 flex items-center justify-between bg-life-black/60 backdrop-blur-xl z-20 shadow-lg transition-all duration-300 select-none sticky top-0">
       
       {/* 🟢 LEFT SECTION: IDENTITY (Clickable) */}
-      <div 
+      <motion.div 
         onClick={handleIdentityClick}
-        className="flex items-center gap-3 cursor-pointer active:opacity-80 transition-opacity"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex items-center gap-3 cursor-pointer group"
       >
-        {/* Avatar & Level */}
-        <div className="w-10 h-10 rounded-full bg-life-muted/20 border border-life-silver flex items-center justify-center relative overflow-hidden ring-1 ring-life-muted/50 group">
-           {linkedSkill && linkedSkill.icon ? (
-             <span className="text-xl">{linkedSkill.icon}</span>
-           ) : (
-             <User size={20} className="text-life-silver group-hover:scale-110 transition-transform" />
-           )}
-          
-          {/* Level Badge */}
-          <div className="absolute bottom-0 right-0 bg-life-gold text-life-black text-[9px] font-black px-1.5 py-0.5 rounded-tl-md shadow-sm z-10">
-            L{user.level}
+        {/* Avatar & Level with Intensity Meter */}
+        <div 
+          className="relative p-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            dispatch.triggerAscension();
+          }}
+        >
+          <EnergyRing size={48} />
+
+          <div className="w-10 h-10 rounded-full bg-life-muted/20 border border-life-silver flex items-center justify-center relative overflow-hidden ring-1 ring-life-muted/50 transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] group-hover:border-white z-10">
+            {linkedSkill && linkedSkill.icon ? (
+              <span className="text-xl">{linkedSkill.icon}</span>
+            ) : (
+              <User size={20} className="text-life-silver group-hover:scale-110 transition-transform duration-500" />
+            )}
+            
+            {/* Level Badge */}
+            <motion.div 
+              initial={{ y: 5, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="absolute bottom-0 right-0 bg-[#FFD35B] text-life-black text-[9px] font-black px-1.5 py-0.5 rounded-tl-md shadow-[0_0_10px_rgba(255,211,91,0.5)] z-10"
+              style={{ textShadow: '0 0 2px rgba(0,0,0,0.2)' }}
+            >
+              <span style={{ textShadow: '0 0 8px #FFD35B' }}>L{user.level}</span>
+            </motion.div>
+            
+            {/* Visual Feedback for Taps */}
+            <AnimatePresence>
+              {tapCount > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.2 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-[#FFFF00]/50" 
+                />
+              )}
+            </AnimatePresence>
           </div>
-          
-          {/* Visual Feedback for Taps */}
-          {tapCount > 0 && (
-             <div className="absolute inset-0 bg-life-crimson/20 animate-pulse" />
-          )}
         </div>
 
         {/* Name & XP */}
         <div className="flex flex-col justify-center">
-          <h1 className="text-sm font-bold leading-none tracking-wide text-life-text/90 mb-1.5 truncate max-w-[150px] sm:max-w-none">
+          <h1 className="text-sm font-bold leading-none tracking-wide text-life-text/90 mb-1.5 truncate max-w-[150px] sm:max-w-none group-hover:text-white transition-colors">
             {displayTitle.toUpperCase()} 
           </h1>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[9px] text-life-gold/80">{user.currentXP}/{user.targetXP} XP</span>
+            <span className={`font-mono text-[9px] text-[#FFD35B] font-black ${isAscending ? 'drop-shadow-[0_0_5px_rgba(255,211,91,0.5)]' : ''}`}>
+              {user.currentXP}/{user.targetXP} XP
+            </span>
             
             {/* Level XP Bar */}
-            <div className="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700/50">
-              <div 
-                className="h-full bg-gradient-to-r from-life-gold to-yellow-200 transition-all duration-700 ease-out shadow-[0_0_10px_rgba(251,191,36,0.5)]" 
-                style={{ width: `${xpPercentage}%` }}
-              ></div>
+            <div className="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700/50 relative">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${xpPercentage}%` }}
+                transition={{ duration: isAscending ? 0.4 : 1, ease: "easeOut" }}
+                className="h-full bg-[#FFD35B] relative"
+                style={{ 
+                  boxShadow: isAscending ? '0 0 12px #FFD35B, inset 0 0 4px #FFD35B' : 'none',
+                }}
+              >
+                {/* Ignite Effects (Only during Ascension) */}
+                {isAscending && (
+                  <>
+                    {/* 1px White Core */}
+                    <div className="absolute inset-x-0 top-[0.5px] h-[0.5px] bg-white/90 rounded-full z-10" />
+                    
+                    {/* Light Bleed Pulse */}
+                    <motion.div 
+                      animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      className="absolute inset-0 bg-white blur-[2px] rounded-full"
+                    />
+                  </>
+                )}
+              </motion.div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
       
       {/* 🟢 RIGHT SECTION: SETTINGS, ECONOMY & SURVIVAL */}
       <div className="flex items-center gap-3">
           
-          {/* ⚙️ SETTINGS BUTTON (Replaces 5-tap requirement) */}
-          <button 
+          {/* ⚙️ SETTINGS BUTTON */}
+          <motion.button 
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => dispatch.setModal('devConsole')}
-            className="p-2 rounded-full text-life-muted hover:text-life-gold hover:bg-life-gold/10 transition-all active:scale-95"
+            className="p-2 rounded-full text-life-muted hover:text-life-gold hover:bg-life-gold/10 transition-all"
             title="System Settings"
           >
             <Settings size={20} />
-          </button>
-
-
+          </motion.button>
 
           {/* 💰 Resources Container */}
-          <div className="hidden sm:flex flex-col items-end gap-0.5 mr-1">
-            <div className="flex items-center text-life-gold font-mono text-xs">
-                <span className="mr-1.5 text-xs">💰</span> {user.gold}
+          <motion.div 
+            whileHover={{ y: -2 }}
+            className="hidden sm:flex flex-col items-end gap-0.5 mr-1"
+          >
+            <div className="flex items-center text-life-gold font-mono text-xs font-black">
+                <span className="mr-1.5 text-xs animate-pulse">💰</span> {user.gold}
             </div>
-            {/* 🛡️ CLICKABLE HONOR */}
-            <div 
-                onClick={openHonorBreakdown}
-                className="flex items-center text-indigo-400 font-mono text-xs cursor-pointer hover:text-indigo-300 hover:scale-105 transition-all"
-            >
-                <Award size={10} className="mr-1 fill-current opacity-80" /> {user.honor}%
-            </div>
-          </div>
+          </motion.div>
 
           {/* 🛡️ Mobile Resource (Compact) */}
-          <div className="sm:hidden flex items-center gap-2 mr-1">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="sm:hidden flex items-center gap-2 mr-1"
+          >
              <div className="flex flex-col items-center justify-center w-8 h-8 rounded bg-life-gold/10 border border-life-gold/20">
-                <span className="text-[8px]">💰</span>
+                <span className="text-[8px] animate-pulse">💰</span>
                 <span className="text-[9px] font-bold text-life-gold">{user.gold}</span>
              </div>
-             {/* 🛡️ CLICKABLE HONOR MOBILE */}
-             <div 
-                onClick={openHonorBreakdown}
-                className="flex flex-col items-center justify-center w-8 h-8 rounded bg-indigo-500/10 border border-indigo-500/20 cursor-pointer active:scale-95 transition-transform"
-             >
-                <Award size={8} className="text-indigo-400 mb-0.5" />
-                <span className="text-[9px] font-bold text-indigo-400">{user.honor}%</span>
-             </div>
-          </div>
+          </motion.div>
 
           {/* 🔥 STREAK WIDGET (With Survival Ring) - CLICKABLE */}
-          <div 
+          <motion.div 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => dispatch.setModal('streak')} // 👈 Opens Modal
-            className="relative w-12 h-12 flex items-center justify-center group cursor-pointer hover:scale-105 transition-transform"
+            className="relative w-12 h-12 flex items-center justify-center group cursor-pointer"
           >
              
              {/* Progress Ring */}
@@ -185,20 +227,20 @@ const Header: React.FC = () => {
                     stroke={isSafe ? '#10b981' : '#fbbf24'} // Green if safe, Gold if pending
                     strokeWidth={stroke}
                     strokeDasharray={circumference + ' ' + circumference}
-                    style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+                    style={{ strokeDashoffset, transition: `stroke-dashoffset ${isAscending ? '0.4s' : '0.8s'} cubic-bezier(0.4, 0, 0.2, 1)` }}
                     strokeLinecap="round"
                     fill="transparent"
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
-                    className={isSafe ? 'drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]' : ''}
+                    className={isSafe ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]' : ''}
                 />
              </svg>
 
              {/* Center Flame */}
              <div className={`
-                w-8 h-8 rounded-full flex flex-col items-center justify-center z-10 transition-colors
-                ${isSafe ? 'bg-life-easy/10' : 'bg-life-black'}
+                w-8 h-8 rounded-full flex flex-col items-center justify-center z-10 transition-all duration-500
+                ${isSafe ? 'bg-life-easy/10 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'bg-life-black'}
              `}>
                 <Flame size={12} className={`
                     absolute -top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity 
@@ -206,10 +248,10 @@ const Header: React.FC = () => {
                 `} />
                 <span className="text-[6px] text-life-muted uppercase leading-none mt-0.5 tracking-tighter">Day</span>
                 <span className={`text-sm font-black leading-none ${isSafe ? 'text-life-easy' : 'text-life-crimson'}`}>
-                    {user.streak}
+                    {isSafe ? user.streak + 1 : user.streak}
                 </span>
              </div>
-          </div>
+          </motion.div>
       </div>
     </header>
   );

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Stat, UserProfile } from '../../../types/types';
+import { toRoman } from '../../../utils/roman-helpers';
 import StatsRadar from '../../StatsRadar';
 import { getStatIcon, getStatColor } from '../../../utils/stat-helpers';
 import { Hexagon, List } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAscension } from '../../../contexts/AscensionContext';
 
 // --- HOOK: The Balance Algorithm ---
 const useBalanceAlgorithm = (stats: Record<Stat, number>) => {
@@ -48,48 +51,107 @@ interface StatRowProps {
     stat: Stat;
     xp: number;
     target: number;
+    onIncrease?: (color: string) => void;
 }
 
-const StatDataRow: React.FC<StatRowProps> = ({ stat, xp, target }) => {
+const StatDataRow: React.FC<StatRowProps> = ({ stat, xp, target, onIncrease }) => {
     const percentage = target > 0 ? Math.min((xp / target) * 100, 100) : 0;
     const Icon = getStatIcon(stat);
     const color = getStatColor(stat);
     const fullName = STAT_FULL_NAMES[stat] || stat;
+    const prevXp = useRef(xp);
+    const { state: lifeState } = useAscension();
+    const isAscending = lifeState.ui.systemAscending.isActive;
+
+    useEffect(() => {
+        if (xp > prevXp.current) {
+            onIncrease?.(color);
+        }
+        prevXp.current = xp;
+    }, [xp, color, onIncrease]);
 
     return (
-        <div className="flex flex-col w-full mb-2 group">
+        <div 
+            className="flex flex-col w-full mb-2 group cursor-pointer"
+            onClick={() => onIncrease?.(color)}
+        >
             {/* Top Row: Icon/Name & Numbers */}
             <div className="flex justify-between items-end px-0 mb-1">
                 <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-md bg-life-black border border-zinc-800 flex items-center justify-center shadow-sm group-hover:border-life-muted/40 transition-colors">
-                        <Icon size={14} style={{ color }} />
-                    </div>
                     <div className="flex flex-col leading-none gap-0.5">
-                        <span className="font-black text-[10px] text-life-text uppercase tracking-widest">{fullName}</span>
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[8px] font-mono text-life-muted font-bold opacity-50">{stat}</span>
-                            <span className="text-[8px] font-mono text-life-gold font-bold bg-life-gold/10 px-1 rounded-[2px]">LVL {Math.floor(xp / 20) + 1}</span>
+                        <span className="font-bold text-[10px] text-white uppercase tracking-widest" style={{ textShadow: isAscending ? `0 0 10px ${color}` : 'none' }}>{fullName}</span>
+                        <div className="flex items-center gap-1.5 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <Icon size={10} style={{ color }} />
+                            <span className="text-[8px] font-mono text-life-gold font-bold">{toRoman(Math.floor(xp / 20) + 1)}</span>
                         </div>
                     </div>
                 </div>
                 
-                <p className="text-[10px] font-mono text-life-text text-right leading-none">
-                    <span style={{ color }} className="font-black text-xs">{xp.toFixed(0)}</span>
-                    <span className="text-life-muted/40 text-[9px] ml-1">/ {target}</span>
+                <p className="text-[10px] font-mono text-white/40 text-right leading-none" style={{ textShadow: isAscending ? `0 0 5px ${color}` : 'none' }}>
+                    <motion.span 
+                        key={xp}
+                        initial={{ scale: 1.1 }}
+                        animate={{ scale: isAscending ? [1, 1.1, 1] : 1 }}
+                        transition={isAscending ? { duration: 0.5, repeat: Infinity } : {}}
+                        className="font-black text-xs inline-block"
+                        style={{ color, textShadow: isAscending ? `0 0 15px ${color}` : `0 0 8px ${color}66` }}
+                    >
+                        {xp.toFixed(0)}
+                    </motion.span>
+                    <span className="ml-1">/ {target}</span>
                 </p>
             </div>
 
-            {/* Bottom Row: Large Bar */}
-            <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-zinc-800 relative shadow-inner">
+            {/* Bottom Row: Real Neon Light Source Bar */}
+            <div className="w-full bg-black/80 h-[3px] rounded-full relative border border-zinc-900/50">
+                {/* Unlit Tube Background (Faint Color) */}
                 <div 
-                    className="h-full rounded-full transition-all duration-700 ease-out relative z-10"
-                    style={{ width: `${percentage}%`, backgroundColor: color }}
-                ></div>
-                {/* Background glow effect */}
-                <div 
-                    className="absolute inset-0 opacity-30 blur-[3px]"
-                    style={{ width: `${percentage}%`, backgroundColor: color }}
-                ></div>
+                    className="absolute inset-0 rounded-full opacity-10"
+                    style={{ backgroundColor: color }}
+                />
+
+                {/* Progress Fill with Neon Light Source Effect */}
+                <motion.div 
+                    className="h-full rounded-full relative z-10"
+                    initial={{ width: 0 }}
+                    animate={{ 
+                        width: `${percentage}%`,
+                        opacity: isAscending ? [0.4, 1, 0.6, 1] : 1
+                    }}
+                    style={{ 
+                        backgroundColor: color,
+                        boxShadow: isAscending ? `0 0 20px 4px ${color}` : 'none',
+                    }}
+                    transition={{ 
+                        width: { type: 'spring', stiffness: 50, damping: 20 },
+                        opacity: { duration: 0.5 }
+                    }}
+                >
+                    {/* White Core (1px center line) - Only in Ascending */}
+                    {isAscending && <div className="absolute inset-x-0 top-[1px] h-[1px] bg-white opacity-90 rounded-full" />}
+
+                    {/* Ascending Rapid Pulse */}
+                    {isAscending && (
+                        <motion.div 
+                            animate={{ opacity: [0, 0.6, 0] }}
+                            transition={{ duration: 0.3, repeat: Infinity }}
+                            className="absolute inset-0 bg-white rounded-full blur-[2px]"
+                        />
+                    )}
+
+                    {/* Active Glow Pulse (only during increase/interaction) */}
+                    <AnimatePresence>
+                        {xp > prevXp.current && (
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: [0, 1, 0] }}
+                                transition={{ duration: 0.8 }}
+                                className="absolute inset-0 z-20 rounded-full"
+                                style={{ boxShadow: `0 0 20px ${color}` }}
+                            />
+                        )}
+                    </AnimatePresence>
+                </motion.div>
             </div>
         </div>
     );
@@ -103,12 +165,42 @@ interface AttributeAnalysisProps {
 
 export const AttributeAnalysis: React.FC<AttributeAnalysisProps> = ({ user }) => {
     const [viewMode, setViewMode] = useState<'graph' | 'data'>('data');
+    const [pulseColor, setPulseColor] = useState<string | null>(null);
+    const { state: lifeState } = useAscension();
+    const isAscending = lifeState.ui.systemAscending.isActive;
     const { xpValues, globalTarget } = useBalanceAlgorithm(user.stats);
 
     const statsOrder: Stat[] = [Stat.STR, Stat.INT, Stat.DIS, Stat.HEA, Stat.CRT, Stat.SPR, Stat.REL, Stat.FIN];
 
+    const handleStatPulse = (color: string) => {
+        setPulseColor(color);
+        setTimeout(() => setPulseColor(null), 1000);
+    };
+
     return (
-        <div className="bg-life-black border border-zinc-800 rounded-xl p-4 mb-4 shadow-lg shadow-black/50 relative overflow-hidden group">
+        <div className="bg-life-black border border-zinc-900 rounded-xl p-4 mb-4 shadow-2xl relative overflow-hidden group transition-all duration-500">
+            {/* 🌈 CHROMATIC PULSE OVERLAY (Subtle) */}
+            <AnimatePresence>
+                {pulseColor && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.05 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-0 pointer-events-none"
+                        style={{ backgroundColor: pulseColor, filter: 'blur(40px)' }}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Pulsing Border (Subtle) */}
+            {pulseColor && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.5, 0] }}
+                    className="absolute inset-0 z-0 border rounded-xl pointer-events-none"
+                    style={{ borderColor: pulseColor }}
+                />
+            )}
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-life-muted/30 rounded-tl-lg"></div>
             <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-life-muted/30 rounded-tr-lg"></div>
@@ -118,12 +210,10 @@ export const AttributeAnalysis: React.FC<AttributeAnalysisProps> = ({ user }) =>
             {/* Header & Toggle */}
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-life-text flex items-center gap-2">
-                        <span className="text-life-gold">⬡</span> Attribute Analysis
+                    <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 transition-all duration-300 ${isAscending ? 'text-white' : 'text-life-text'}`}
+                        style={{ textShadow: isAscending ? '0 0 10px rgba(255, 255, 255, 0.5)' : 'none' }}>
+                        <span className={isAscending ? 'text-red-500 animate-pulse' : 'text-life-gold'}>⬡</span> Attribute Analysis
                     </h3>
-                    <p className="text-[9px] text-life-muted uppercase font-mono tracking-[0.1em] mt-1 opacity-60">
-                        Neural_Net_v1.4 // Connected
-                    </p>
                 </div>
                 
                 <div className="flex items-center bg-black border border-zinc-800 p-1 rounded-lg gap-1">
@@ -158,6 +248,7 @@ export const AttributeAnalysis: React.FC<AttributeAnalysisProps> = ({ user }) =>
                                 stat={stat}
                                 xp={xpValues[stat]}
                                 target={globalTarget}
+                                onIncrease={handleStatPulse}
                             />
                         ))}
                     </div>

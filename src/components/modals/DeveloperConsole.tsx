@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Code, Eye, Music, Settings2, Zap, Palette, Terminal, Brain } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useCampaign } from '../../contexts/CampaignContext';
 import { ConsoleActionTab } from './console/ConsoleActionTab';
 import { SystemTab } from './console/tabs/SystemTab';
@@ -14,7 +14,7 @@ import { MediaTab } from './console/tabs/MediaTab';
 type Tab = 'system' | 'oracle' | 'actions' | 'themes' | 'state' | 'log' | 'media';
 
 const DeveloperConsole: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { campaignDispatch } = useCampaign();
     const [activeTab, setActiveTab] = useState<Tab>('system');
     const [dateOverride, setDateOverride] = useState('');

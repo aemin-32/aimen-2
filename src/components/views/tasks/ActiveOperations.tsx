@@ -2,7 +2,7 @@
 import React from 'react';
 import { Crosshair, FileText, CheckSquare, AlignLeft, Maximize2, Check, Edit, Play } from 'lucide-react';
 import { DIFFICULTY_COLORS } from '../../../types/constants';
-import { useLifeOS } from '../../../contexts/LifeOSContext';
+import { useAscension } from '../../../contexts/AscensionContext';
 
 // Props needed from parent
 interface ActiveOperationsProps {
@@ -18,11 +18,11 @@ interface ActiveOperationsProps {
 export const ActiveOperations: React.FC<ActiveOperationsProps> = ({
     raidOperations, expandedNotes, expandedSubtasks, toggleNotes, toggleSubtasksView, raidDispatch, openRaidStepDetails
 }) => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
 
     return (
         <div className="mb-6 space-y-3">
-            <div className="flex items-center gap-2 px-1 text-life-hard animate-pulse-slow">
+            <div className="flex items-center gap-2 px-1 text-life-hard">
                 <Crosshair size={14} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Active Operations (Tip of the Spear)</span>
             </div>
@@ -40,9 +40,9 @@ export const ActiveOperations: React.FC<ActiveOperationsProps> = ({
                     <div 
                         key={step.id} 
                         onClick={() => toggleSubtasksView(step.id)}
-                        className={`bg-life-paper border-l-4 rounded-r-xl shadow-lg relative overflow-hidden group transition-all duration-300 cursor-pointer ${borderColorClass} hover:bg-white/5`}
+                        className={`bg-black border rounded-xl relative overflow-hidden group transition-all duration-300 cursor-pointer ${borderColorClass} hover:bg-zinc-900 shadow-none`}
+                        style={{ border: `1px solid ${difficultyColor.split(' ')[1] || '#333'}`, boxShadow: 'none !important', filter: 'none !important' }}
                     >
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '8px 8px' }} />
                         <div className="p-3">
                             <div className="flex justify-between items-start relative z-10">
                                 <div className="flex-1 min-w-0 pr-2">

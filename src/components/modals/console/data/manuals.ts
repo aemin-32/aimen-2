@@ -19,7 +19,7 @@ The Commander is the central interface for the user. It is the only node that ma
 - Complex Commands: If a user asks for multiple things ("Add a task AND change theme"), the Commander breaks this down or asks for clarification.
 
 4. MEMORY PROTOCOL
-- Storage: 'LIFE_OS_ORACLE_HISTORY' (Local Storage).
+- Storage: 'ASCENSION_ORACLE_HISTORY' (Local Storage).
 - Context Window: Sends last 20 messages to Gemini to maintain conversation flow.
 - Reset: Can be purged via "Purge Context Memory" button.
 
@@ -75,7 +75,7 @@ If the Executor outputs invalid JSON, the "Refiner Node" (if active) attempts to
         content: `/// CLASSIFIED: DESIGNER NODE MANUAL ///
 
 1. OVERVIEW
-The Designer has full control over the CSS Variables and DOM styling of LifeOS. It can generate themes on the fly based on abstract descriptions (e.g., "Make it look like Cyberpunk 2077").
+The Designer has full control over the CSS Variables and DOM styling of Ascension. It can generate themes on the fly based on abstract descriptions (e.g., "Make it look like Cyberpunk 2077").
 
 2. TRIGGER KEYWORDS
 - "Change theme", "Colors", "Design", "Look like..."

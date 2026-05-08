@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTasks } from '../../contexts/TaskContext';
 import { useRaids } from '../../contexts/RaidContext';
 import { useCampaign } from '../../contexts/CampaignContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
-import { ChevronDown, ChevronUp, Archive, FolderPlus, Trash, Plus, ChevronRight, Pencil, Moon, Target, Scale, CheckCircle2 } from 'lucide-react';
+import { useAscension } from '../../contexts/AscensionContext';
+import { ChevronDown, ChevronUp, Archive, FolderPlus, Trash, Plus, ChevronRight, Pencil, Moon, Target, Scale, CheckCircle2, Calendar } from 'lucide-react';
 import TaskCard from '../cards/TaskCard';
 import { parseTimeCode } from '../../utils/campaignEngine';
 
@@ -13,7 +14,7 @@ import { ActiveOperations } from './tasks/ActiveOperations';
 import { LawsView } from './tasks/LawsView';
 
 const TasksView: React.FC = () => {
-  const { state, dispatch } = useLifeOS(); 
+  const { state, dispatch } = useAscension(); 
   const { taskState, taskDispatch } = useTasks();
   const { raidState, raidDispatch } = useRaids();
   const { campaignState } = useCampaign(); 
@@ -27,7 +28,8 @@ const TasksView: React.FC = () => {
   // UI States
   const [showArchivedSteps, setShowArchivedSteps] = useState(false);
   const [showBacklog, setShowBacklog] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false); // 👈 حالة التبديل الجديدة
+  const [showCompleted, setShowCompleted] = useState(false); 
+  const [completedFilter, setCompletedFilter] = useState<'today' | 'week' | 'month' | 'all'>('all');
   const [showSleepTasks, setShowSleepTasks] = useState(false);
   const [showCampaignTasks, setShowCampaignTasks] = useState(true); 
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
@@ -92,6 +94,42 @@ const TasksView: React.FC = () => {
       else if (isFuture) { if (!t.isCampaign) sleepingTasks.push(t); } 
       else activeTasks.push(t);
   });
+
+  const filteredCompletedTasks = useMemo(() => {
+    const now = state.ui.debugDate ? new Date(state.ui.debugDate) : new Date();
+    
+    return completedTasks.filter(t => {
+        if (!t.completedAt) return false;
+        const compDate = new Date(t.completedAt);
+        
+        if (completedFilter === 'today') {
+            const todayStart = new Date(now);
+            todayStart.setHours(0, 0, 0, 0);
+            return compDate >= todayStart;
+        }
+        if (completedFilter === 'week') {
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - 7);
+            return compDate >= weekStart;
+        }
+        if (completedFilter === 'month') {
+            const monthStart = new Date(now);
+            monthStart.setDate(now.getDate() - 30);
+            return compDate >= monthStart;
+        }
+        return true;
+    }).sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
+  }, [completedTasks, completedFilter, state.ui.debugDate]);
+
+  const groupedCompletedTasks = useMemo(() => {
+    const groups: { [date: string]: typeof tasks } = {};
+    filteredCompletedTasks.forEach(t => {
+        const date = new Date(t.completedAt!).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(t);
+    });
+    return groups;
+  }, [filteredCompletedTasks]);
 
   const handleCreateCategory = (e: React.FormEvent) => {
       e.preventDefault();
@@ -165,7 +203,7 @@ const TasksView: React.FC = () => {
 
             {campaignWeekTasks.length > 0 && (
                 <div className="mb-4 animate-in slide-in-from-bottom-2">
-                    <button onClick={() => setShowCampaignTasks(!showCampaignTasks)} className="w-full flex items-center justify-between p-3 rounded-xl border bg-indigo-950/20 border-indigo-500/20 hover:bg-indigo-900/30 transition-all group">
+                    <button onClick={() => setShowCampaignTasks(!showCampaignTasks)} className="w-full flex items-center justify-between p-3 rounded-xl border bg-indigo-950/10 border-indigo-500/20 hover:bg-indigo-900/20 transition-all group shadow-none">
                         <div className="flex items-center gap-3"><Target size={16} className="text-indigo-400 group-hover:scale-110 transition-transform" /><div className="text-left"><span className="text-xs font-bold text-indigo-300 uppercase tracking-widest flex items-center gap-2">Week {campaign.currentWeek} Objectives</span></div></div>
                         <div className="text-indigo-400/50">{showCampaignTasks ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</div>
                     </button>
@@ -186,31 +224,49 @@ const TasksView: React.FC = () => {
             </div>
 
             <div className="space-y-4 mb-4">
-                {categories.map(cat => {
+                {categories.map((cat, idx) => {
                     const catTasks = activeTasks.filter(t => t.categoryId === cat.id);
                     return (
-                        <div key={cat.id} className="animate-in slide-in-from-bottom-2">
+                        <motion.div 
+                            key={cat.id} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="relative"
+                        >
                             <div className="flex items-center justify-between mb-2 group relative">
                                 {editingCatId === cat.id ? (
-                                    <div className="flex gap-2 w-full">
+                                    <div className="flex gap-2 w-full animate-in fade-in zoom-in-95">
                                         <input type="text" value={editCatName} onChange={(e) => setEditCatName(e.target.value)} className="bg-life-black border border-zinc-800 rounded px-2 py-0.5 text-xs text-life-text w-full focus:border-life-gold outline-none" autoFocus onBlur={() => handleUpdateCategory(cat.id)} onKeyDown={(e) => e.key === 'Enter' && handleUpdateCategory(cat.id)} />
                                     </div>
                                 ) : (
                                     <button onClick={() => taskDispatch.toggleCategory(cat.id)} className="flex items-center gap-2 text-life-muted hover:text-life-text transition-colors flex-1 text-left py-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-life-gold/80">{cat.isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</span>
-                                        <span className="text-xs font-bold uppercase tracking-wider">{cat.title}</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-life-gold/80 group-hover:scale-110 transition-transform">{cat.isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</span>
+                                        <span className="text-xs font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">{cat.title}</span>
                                         <span className="text-[9px] bg-life-muted/10 px-1.5 rounded-full text-life-muted">{catTasks.length}</span>
                                     </button>
                                 )}
                                 <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-                                    <button onClick={(e) => { e.stopPropagation(); setEditingCatId(cat.id); setEditCatName(cat.title); }} className="p-2 text-life-muted hover:text-white hover:bg-life-muted/10 rounded cursor-pointer"><Pencil size={14} /></button>
-                                    <button onClick={(e) => { e.stopPropagation(); confirmDeleteCategory(cat.id); }} className="p-2 text-life-muted hover:text-life-hard hover:bg-life-hard/10 rounded cursor-pointer"><Trash size={14} /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); setEditingCatId(cat.id); setEditCatName(cat.title); }} className="p-2 text-life-muted hover:text-white hover:bg-life-muted/10 rounded cursor-pointer transition-colors"><Pencil size={14} /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); confirmDeleteCategory(cat.id); }} className="p-2 text-life-muted hover:text-life-hard hover:bg-life-hard/10 rounded cursor-pointer transition-colors"><Trash size={14} /></button>
                                 </div>
                             </div>
-                            {!cat.isCollapsed && (
-                                <div className="space-y-1 pl-1">{catTasks.map(task => <TaskCard key={task.id} task={task} onToggle={taskDispatch.toggleTask} onDelete={confirmDeleteTask} />)}{catTasks.length === 0 && <div className="text-[10px] text-life-muted/40 italic pl-2">No active missions in section.</div>}</div>
-                            )}
-                        </div>
+                            <AnimatePresence>
+                                {!cat.isCollapsed && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="space-y-1 pl-1 pb-2">
+                                            {catTasks.map(task => <TaskCard key={task.id} task={task} onToggle={taskDispatch.toggleTask} onDelete={confirmDeleteTask} />)}
+                                            {catTasks.length === 0 && <div className="text-[10px] text-life-muted/40 italic pl-2">No active missions in section.</div>}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     );
                 })}
 
@@ -226,8 +282,8 @@ const TasksView: React.FC = () => {
 
             {sleepingTasks.length > 0 && (
                 <div className="mb-6 animate-in slide-in-from-bottom-2">
-                    <button onClick={() => setShowSleepTasks(!showSleepTasks)} className="w-full flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-life-black hover:bg-life-muted/5 transition-all group">
-                        <div className="flex items-center gap-3"><Moon size={16} className="text-life-muted group-hover:text-life-text transition-colors" /><div className="text-left"><span className="text-xs font-bold text-life-muted group-hover:text-life-text uppercase tracking-widest transition-colors">Future / Sleeping ({sleepingTasks.length})</span></div></div>
+                    <button onClick={() => setShowSleepTasks(!showSleepTasks)} className="w-full flex items-center justify-between p-3 rounded-xl border border-zinc-900 bg-[#050505] hover:bg-zinc-900/40 transition-all group shadow-none">
+                        <div className="flex items-center gap-3"><Calendar size={16} className="text-life-muted group-hover:text-life-text transition-colors" /><div className="text-left"><span className="text-xs font-bold text-life-muted group-hover:text-life-text uppercase tracking-widest transition-colors">Upcoming ({sleepingTasks.length})</span></div></div>
                         <div className="text-life-muted/50">{showSleepTasks ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</div>
                     </button>
                     {showSleepTasks && <div className="mt-2 pl-2 border-l border-zinc-800 space-y-2 opacity-80">{sleepingTasks.map(task => <div key={task.id} className="scale-95 origin-top-left"><TaskCard task={task} onToggle={taskDispatch.toggleTask} onDelete={confirmDeleteTask} /></div>)}</div>}
@@ -249,7 +305,7 @@ const TasksView: React.FC = () => {
                 </div>
             )}
 
-            {/* 🟢 COMPLETED LOG (UPDATED TO TOGGLE) */}
+            {/* 🟢 COMPLETED LOG (UPDATED WITH FILTERS & GROUPING) */}
             {completedTasks.length > 0 && (
                 <div className="mb-6">
                     <button 
@@ -258,16 +314,51 @@ const TasksView: React.FC = () => {
                     >
                         <div className="flex items-center gap-2 text-life-muted group-hover:text-life-easy">
                             <CheckCircle2 size={14} />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Completed Log ({completedTasks.length})</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Completed Log ({filteredCompletedTasks.length})</span>
                         </div>
                         {showCompleted ? <ChevronUp size={14} className="text-life-muted" /> : <ChevronDown size={14} className="text-life-muted" />}
                     </button>
                     
                     {showCompleted && (
-                        <div className="space-y-1 mt-2 pl-2 border-l border-zinc-800 opacity-60 hover:opacity-100 transition-opacity animate-in slide-in-from-top-1">
-                            {completedTasks.map(task => (
-                                <TaskCard key={task.id} task={task} onToggle={taskDispatch.toggleTask} onDelete={confirmDeleteTask} />
-                            ))}
+                        <div className="mt-3 animate-in slide-in-from-top-1">
+                            {/* Filter Tabs */}
+                            <div className="flex gap-1 mb-4 px-1">
+                                {(['today', 'week', 'month', 'all'] as const).map((f) => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setCompletedFilter(f)}
+                                        className={`flex-1 py-1 text-[9px] font-black uppercase tracking-widest rounded transition-all border ${
+                                            completedFilter === f
+                                                ? 'bg-life-gold/10 border-life-gold text-life-gold shadow-[0_0_10px_rgba(234,179,8,0.1)]'
+                                                : 'bg-black border-white/5 text-zinc-500 hover:text-zinc-300 hover:border-white/10'
+                                        }`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="space-y-6 pl-2 border-l border-zinc-800/50">
+                                {Object.entries(groupedCompletedTasks).map(([date, dateTasks]) => (
+                                    <div key={date}>
+                                        <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-1">
+                                            {date}
+                                        </div>
+                                        <div className="space-y-1">
+                                            {dateTasks.map(task => (
+                                                <div key={task.id} className="opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300">
+                                                    <TaskCard task={task} onToggle={taskDispatch.toggleTask} onDelete={confirmDeleteTask} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                {filteredCompletedTasks.length === 0 && (
+                                    <div className="text-center py-4 text-[10px] text-zinc-600 uppercase tracking-widest">
+                                        No missions completed in this period
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

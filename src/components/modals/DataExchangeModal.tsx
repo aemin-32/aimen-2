@@ -1,12 +1,12 @@
 
 import React, { useState, useRef } from 'react';
 import { X, Copy, Check, Download, Upload, FileText, Database } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { playSound } from '../../utils/audio';
 import InjectionForm from '../forms/InjectionForm'; // 👈 Import the advanced form
 
 const DataExchangeModal: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { modalData } = state.ui;
     
     // mode: 'export' (Read only + Copy) OR 'import' (Editable + Injection Form)
@@ -38,7 +38,7 @@ const DataExchangeModal: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `lifeos-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `ascension-backup-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

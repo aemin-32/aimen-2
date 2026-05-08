@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Trash2, Archive, Edit2, Activity, Shield, Zap, Brain, Heart, Dumbbell, BookOpen, Lock, Hash, AlertTriangle, Clock, Bell, Check, Palette, CalendarPlus, ChevronDown, Copy, Coins, Users, Flame } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
 import { useRaids } from '../../contexts/RaidContext';
@@ -34,7 +34,7 @@ const StatIcon = ({ stat, size = 14 }: { stat: Stat; size?: number }) => {
 };
 
 const ItemDetailsModal: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { taskState, taskDispatch } = useTasks();
     const { habitState, habitDispatch } = useHabits();
     const { raidState, raidDispatch } = useRaids();

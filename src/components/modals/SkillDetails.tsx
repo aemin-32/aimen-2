@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toRoman } from '../../utils/roman-helpers';
 import { X, Trophy, Calendar, Zap, AlertTriangle, Trash2, Dumbbell, Brain, Heart, Activity, Clock, Palette, Users, Coins, Flame, Edit2, BarChart2, ChevronLeft } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 // --- تصحيح المسارات (الرجوع خطوتين ../../ والدخول للمجلدات الصحيحة) ---
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { SkillRank } from '../../types/skillTypes';
 import { Stat } from '../../types/types';
 import { STAT_COLORS } from '../../types/constants';
@@ -34,7 +36,7 @@ const StatIcon = ({ stat, size = 14 }: { stat: Stat; size?: number }) => {
 
 const SkillDetails: React.FC = () => {
     const { skillState, skillDispatch } = useSkills();
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const { skills, activeSkillId } = skillState;
     const [isEditing, setIsEditing] = useState(false);
     const [showChart, setShowChart] = useState(false);
@@ -154,17 +156,17 @@ const SkillDetails: React.FC = () => {
                                     <AreaChart data={chartData}>
                                         <defs>
                                             <linearGradient id="colorXp" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3}/>
-                                                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="#FFD35B" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#FFD35B" stopOpacity={0}/>
                                             </linearGradient>
                                         </defs>
                                         <XAxis dataKey="level" stroke="#525252" fontSize={10} tickLine={false} axisLine={false} />
                                         <YAxis stroke="#525252" fontSize={10} tickLine={false} axisLine={false} width={30} />
                                         <Tooltip 
                                             contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #27272a', borderRadius: '8px', fontSize: '12px' }}
-                                            itemStyle={{ color: '#fbbf24' }}
+                                            itemStyle={{ color: '#FFD35B' }}
                                         />
-                                        <Area type="monotone" dataKey="xp" stroke="#fbbf24" strokeWidth={2} fillOpacity={1} fill="url(#colorXp)" />
+                                        <Area type="monotone" dataKey="xp" stroke="#FFD35B" strokeWidth={2} fillOpacity={1} fill="url(#colorXp)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -176,22 +178,33 @@ const SkillDetails: React.FC = () => {
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
                                     <span className="text-4xl font-black font-mono leading-none" style={{ color: progressPercent >= 100 ? '#10b981' : undefined }}>
-                                        LVL {skill.level}
+                                        {toRoman(skill.level)}
                                     </span>
                                     <span className="text-xs font-mono text-life-muted mb-1">
-                                        <span className="text-life-text">{skill.currentXP}</span> / {skill.targetXP} XP
+                                        <span className="text-[#FFD35B] font-black drop-shadow-[0_0_8px_rgba(255,211,91,0.5)]">{skill.currentXP}</span> / {skill.targetXP} XP
                                     </span>
                                 </div>
                                 
-                                <div className="h-3 w-full bg-life-black rounded-full overflow-hidden border border-zinc-800 relative">
+                                <div className="h-4 w-full bg-life-black rounded-full overflow-hidden border border-zinc-800 relative">
                                     <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(90deg, transparent 95%, #000 95%)', backgroundSize: '10% 100%' }} />
-                                    <div 
-                                        className={`h-full transition-all duration-1000 ease-out relative overflow-hidden ${skill.isRusty ? 'grayscale' : ''}`}
-                                        style={{ width: `${progressPercent}%` }} 
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressPercent}%` }}
+                                        className={`h-full transition-all duration-1000 ease-out relative overflow-hidden ${skill.isRusty ? 'grayscale bg-zinc-500' : 'bg-[#FFD35B]'}`}
+                                        style={{ 
+                                            boxShadow: !skill.isRusty ? '0 0 20px #FFD35B, inset 0 0 8px #FFD35B' : 'none',
+                                        }} 
                                     >   
-                                        <div className={`absolute inset-0 opacity-80 ${rankTextColor.replace('text-', 'bg-')} shadow-[0_0_15px_currentColor]`} />
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
-                                    </div>
+                                        {!skill.isRusty && (
+                                            <>
+                                                {/* 1px White Core */}
+                                                <div className="absolute inset-x-0 top-[1px] h-[1px] bg-white opacity-90 rounded-full z-10" />
+                                                
+                                                {/* Light Bleed Shimmer */}
+                                                <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
+                                            </>
+                                        )}
+                                    </motion.div>
                                 </div>
                             </div>
 

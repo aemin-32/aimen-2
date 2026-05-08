@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { Cloud, Save, Download, ShieldCheck, Database } from 'lucide-react';
-import { useLifeOS } from '../../../contexts/LifeOSContext';
+import { useAscension } from '../../../contexts/AscensionContext';
 
 export const CloudSyncSection: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [isExporting, setIsExporting] = useState(false);
 
     const handleManualBackup = () => {
@@ -15,7 +15,7 @@ export const CloudSyncSection: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `LifeOS_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `Ascension_Backup_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

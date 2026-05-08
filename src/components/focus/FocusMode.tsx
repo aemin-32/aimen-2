@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
 import { useRaids } from '../../contexts/RaidContext';
@@ -15,7 +15,7 @@ import { NotesPanel } from './components/NotesPanel';
 import { SubtasksPanel } from './components/SubtasksPanel';
 
 const FocusMode: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { taskState, taskDispatch } = useTasks();
     const { habitState, habitDispatch } = useHabits();
     const { raidState, raidDispatch } = useRaids();

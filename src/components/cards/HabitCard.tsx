@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toRoman } from '../../utils/roman-helpers';
 import { Flame, Check, Brain, Dumbbell, Activity, Heart, Zap, Shield, Maximize2, X, FolderInput, Trash2, Clock, Play, TrendingUp, ChevronDown, ChevronUp, Palette, Coins, Users, Hash } from 'lucide-react';
 import { Habit, DailyStatus } from '../../types/habitTypes';
 import { Stat } from '../../types/types';
 import { STAT_COLORS, DIFFICULTY_COLORS } from '../../types/constants';
 import { getHabitLevel } from '../../utils/habitEngine';
 import { useHabits } from '../../contexts/HabitContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useSkills } from '../../contexts/SkillContext'; // 👈 IMPORT
 import { calculateTaskReward } from '../../utils/economyEngine'; // 👈 IMPORT
 
@@ -32,7 +34,7 @@ const StatIcon = ({ stat, size = 14 }: { stat: Stat; size?: number }) => {
 
 const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => {
   const { habitState, habitDispatch } = useHabits();
-  const { dispatch, state } = useLifeOS();
+  const { dispatch, state } = useAscension();
   const { skillState } = useSkills(); // 👈 USE HOOK
   const { categories } = habitState;
   
@@ -112,13 +114,23 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => 
       return { isoDate, statusColor, isToday };
   });
 
+  const isAscending = state.ui.systemAscending.isActive;
+
   return (
-    <div 
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      transition={isAscending ? { duration: 0.15, ease: "linear" } : undefined}
       onClick={() => setIsExpanded(!isExpanded)}
       className={`
-        relative overflow-hidden mb-3 rounded-xl border bg-life-paper transition-all duration-300 group cursor-pointer
+        relative overflow-hidden mb-3 rounded-xl border bg-[#050505] transition-all duration-300 group cursor-pointer shadow-none
         ${borderClass}
-        ${isPending ? 'hover:bg-white/5 hover:scale-[1.01]' : ''}
+        ${isPending ? 'hover:bg-zinc-900 hover:scale-[1.01]' : ''}
+        ${isExpanded ? 'ring-1 ring-life-gold/20' : ''}
       `}
     >
       {/* Background Progress Bar (Habit Level) */}
@@ -158,7 +170,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => 
                     className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-300 bg-life-black
                     ${isCompleted ? 'border-life-easy text-life-easy' 
                      : isFailed ? 'border-life-hard text-life-hard'
-                     : habit.shieldUsed ? 'border-life-diamond text-life-diamond shadow-[0_0_10px_rgba(96,165,250,0.3)]' 
+                     : habit.shieldUsed ? 'border-life-diamond text-life-diamond' 
                      : 'border-zinc-800 text-life-muted'}`}
                 >
                     {habit.shieldUsed && isPending ? <Shield size={16} /> : 
@@ -167,7 +179,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => 
                      <StatIcon stat={habit.stat} size={16} />
                     }
                 </div>
-                <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 py-px rounded text-[7px] font-black uppercase tracking-tighter border bg-life-black whitespace-nowrap ${levelData.phaseColor}`}>LVL {levelData.level}</div>
+                <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 py-px rounded text-[7px] font-black uppercase tracking-tighter border bg-life-black whitespace-nowrap ${levelData.phaseColor}`}>{toRoman(levelData.level)}</div>
             </div>
 
             <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -203,7 +215,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => 
                         
                         {/* 🟢 XP REWARD LABEL (Moved Here) */}
                         {isPending && (
-                            <span className="text-[8px] font-mono font-bold text-life-muted bg-life-black px-1.5 py-0.5 rounded border border-zinc-800">
+                            <span className="text-[8px] font-mono font-black text-[#FFFF00] bg-black/40 px-1.5 py-0.5 rounded border border-[#FFFF00]/30">
                                 +{potentialReward.xp} XP
                             </span>
                         )}
@@ -326,7 +338,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onProcess, onDelete }) => 
               )}
           </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

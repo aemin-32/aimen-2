@@ -1,11 +1,34 @@
 
-import React from 'react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import React, { useEffect } from 'react';
+import { toRoman } from '../../utils/roman-helpers';
+import { useAscension } from '../../contexts/AscensionContext';
 import { Crown, Sparkles, TrendingUp, Check } from 'lucide-react';
+import { dispatchDataBurst } from '../effects/DataBurst';
 
 const LevelUpModal: React.FC = () => {
-  const { state, dispatch } = useLifeOS();
+  const { state, dispatch } = useAscension();
   const { user } = state;
+
+  useEffect(() => {
+    // Fire data bursts on mount
+    const duration = 2 * 1000;
+    const animationEnd = Date.now() + duration;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      dispatchDataBurst(
+        Math.random() * window.innerWidth,
+        Math.random() * window.innerHeight
+      );
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleClose = () => {
     dispatch.setModal('none');
@@ -43,7 +66,7 @@ const LevelUpModal: React.FC = () => {
             LEVEL UP!
         </h2>
         <div className="text-2xl font-mono font-bold text-life-gold mb-8 tracking-widest border px-4 py-1 rounded border-life-gold/50 bg-life-gold/10">
-            LEVEL {user.level}
+            {toRoman(user.level)}
         </div>
 
         {/* 🟢 REWARDS CARD */}
@@ -58,8 +81,8 @@ const LevelUpModal: React.FC = () => {
                     <span className="text-sm font-mono text-white">+100 G</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-life-muted/20">
-                    <span className="text-sm font-bold text-life-diamond">Shield Max Capacity</span>
-                    <span className="text-sm font-mono text-white">REFILLED</span>
+                    <span className="text-sm font-bold text-life-diamond">Shields</span>
+                    <span className="text-sm font-mono text-white">+1 ALL (MAX 3)</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-life-muted/20">
                     <span className="text-sm font-bold text-life-easy">XP Threshold</span>

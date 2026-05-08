@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
+import { toRoman } from '../../utils/roman-helpers';
 import { Dumbbell, Brain, Zap, Shield, Heart, Activity, ChevronRight, BookOpen, Clock, Calendar, AlignLeft, Folder, Plus, Trash2, Target, Bell, X, Palette, CalendarPlus, Flame, Users, Coins } from 'lucide-react';
 import { useTasks } from '../../contexts/TaskContext';
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useCampaign } from '../../contexts/CampaignContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { Task, Subtask } from '../../types/taskTypes';
 import { Difficulty, Stat } from '../../types/types';
 import { DIFFICULTY_COLORS, DIFFICULTY_BG, STAT_COLORS } from '../../types/constants';
@@ -12,15 +14,19 @@ import { openInGoogleCalendar } from '../../utils/googleCalendar';
 interface TaskFormProps {
     onClose: () => void;
     initialData?: Task | null;
+    inheritedData?: any;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData, inheritedData }) => {
     const { taskDispatch } = useTasks();
     const { skillState } = useSkills();
-    const { state } = useLifeOS();
+    const { campaignDispatch } = useCampaign();
+    const { state } = useAscension();
     
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [stakes, setStakes] = useState('');
+    const [notes, setNotes] = useState('');
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
     const [stat, setStat] = useState<Stat>(Stat.DIS);
     const [skillId, setSkillId] = useState<string>('');
@@ -33,25 +39,78 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
     const [reminderTime, setReminderTime] = useState('');
     const [isGoogleCalSync, setIsGoogleCalSync] = useState(false);
 
-    // Initialize Data (Edit Mode)
+    const [isCampaign, setIsCampaign] = useState(false);
+    const [allowedFronts, setAllowedFronts] = useState<Stat[]>([]);
+
+    // 🛠️ HELPER: Format date for datetime-local input safely (Local Time)
+    const formatForInput = (dateStr: string | undefined) => {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const offset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+        } catch (e) {
+            return '';
+        }
+    };
+
+    // Initialize Data (Edit Mode or Inherited)
     useEffect(() => {
-        if (initialData) {
-            setTitle(initialData.title);
-            setDescription(initialData.description || '');
-            setDifficulty(initialData.difficulty);
-            setStat(initialData.stat);
-            setSkillId(initialData.skillId || '');
-            setDueDate(initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : '');
-            setScheduledTime(initialData.scheduledTime ? new Date(initialData.scheduledTime).toISOString().slice(0, 16) : '');
-            setIsTimed(initialData.isTimed || false);
-            setDurationMinutes(initialData.durationMinutes || 0);
-            setSubtasks(initialData.subtasks || []);
+        const editData = initialData || (inheritedData && inheritedData.editTask);
+
+        if (editData) {
+            setTitle(editData.title);
+            setDescription(editData.description || '');
+            setStakes(editData.stakes || '');
+            setNotes(editData.notes || '');
+            setDifficulty(editData.difficulty);
+            setStat(editData.stat);
+            setSkillId(editData.skillId || '');
+            setDueDate(formatForInput(editData.deadline));
+            setScheduledTime(formatForInput(editData.scheduledTime));
+            setIsTimed(editData.isTimed || false);
+            setDurationMinutes(editData.durationMinutes || 0);
+            setSubtasks(editData.subtasks || []);
+            setIsCampaign(editData.isCampaign || false);
             
-            if (initialData.skillId) {
+            if (editData.skillId) {
                 setRewardType('skill');
             }
+        } else if (inheritedData) {
+            if (inheritedData.isCampaign) {
+                setIsCampaign(true);
+            }
+            if (inheritedData.allowedFronts) {
+                const fronts = inheritedData.allowedFronts as Stat[];
+                setAllowedFronts(fronts);
+                if (fronts.length > 0 && !fronts.includes(stat)) {
+                    setStat(fronts[0]);
+                }
+            }
+
+            // Handle Date and Hour Inheritance from Calendar
+            const baseDate = inheritedData.date; // YYYY-MM-DD
+            
+            if (inheritedData.hour !== undefined) {
+                const hour = inheritedData.hour;
+                const hourStr = hour.toString().padStart(2, '0');
+                setScheduledTime(`${baseDate}T${hourStr}:00`);
+                setDueDate(`${baseDate}T${(hour + 1).toString().padStart(2, '0')}:00`);
+            } else if (baseDate) {
+                setDueDate(`${baseDate}T12:00`); // Default to noon if only date
+                setScheduledTime(`${baseDate}T09:00`);
+            }
+            
+            if (inheritedData.defaultType === 'mission') {
+                // Any other defaults for missions from calendar
+            }
         }
-    }, [initialData]);
+    }, [initialData, inheritedData]);
+
+    const statList = allowedFronts.length > 0 
+        ? allowedFronts 
+        : Object.values(Stat);
 
     // 🟢 REWARD TYPE TOGGLE
     const [rewardType, setRewardType] = useState<'stat' | 'skill'>('stat');
@@ -63,18 +122,25 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
         const taskData: any = {
             title,
             description,
+            stakes,
+            notes,
             difficulty,
             stat,
             skillId: rewardType === 'skill' ? (skillId || undefined) : undefined,
-            deadline: dueDate || undefined,
-            scheduledTime: scheduledTime || undefined,
+            deadline: dueDate ? new Date(dueDate).toISOString() : undefined,
+            scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
             isTimed,
             durationMinutes: isTimed ? durationMinutes : 0,
-            subtasks
+            subtasks,
+            isCampaign
         };
 
-        if (initialData) {
-            taskDispatch.updateTask(initialData.id, taskData);
+        const editItem = initialData || (inheritedData && inheritedData.editTask);
+
+        if (editItem) {
+            taskDispatch.updateTask(editItem.id, taskData);
+        } else if (isCampaign) {
+            campaignDispatch.saveMission(taskData);
         } else {
             taskDispatch.addTask(taskData);
             
@@ -208,7 +274,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
                     {rewardType === 'stat' ? (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="grid grid-cols-4 gap-2">
-                                {Object.values(Stat).map((s) => (
+                                {statList.map((s) => (
                                     <button
                                         key={s}
                                         type="button"
@@ -246,7 +312,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
                                 >
                                     <option value="">Select a Skill...</option>
                                     {skillState.skills.map(skill => (
-                                        <option key={skill.id} value={skill.id}>{skill.title} (Lvl {skill.level})</option>
+                                        <option key={skill.id} value={skill.id}>{skill.title} ({toRoman(skill.level)})</option>
                                     ))}
                                 </select>
                                 <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-life-muted rotate-90 pointer-events-none" size={14} />
@@ -275,15 +341,42 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
                 {/* Intel / Description */}
                 <div>
                     <label className="block text-[10px] text-life-muted uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
-                        <AlignLeft size={12} /> Intel / Notes
+                        <AlignLeft size={12} /> Intel / Objectives
                     </label>
                     <textarea 
-                        rows={3}
+                        rows={2}
                         value={description}
                         onChange={e => setDescription(e.target.value)}
-                        placeholder="Add details, links, or sub-objectives..."
+                        placeholder="Core mission details..."
                         className="w-full bg-life-black border border-life-muted/30 rounded-lg p-3 text-xs text-life-text placeholder:text-life-muted/50 focus:outline-none focus:border-life-gold/50 transition-all resize-none"
                     />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-[10px] text-red-500/70 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Shield size={12} /> Stakes
+                        </label>
+                        <textarea 
+                            rows={2}
+                            value={stakes}
+                            onChange={e => setStakes(e.target.value)}
+                            placeholder="Failure impact?"
+                            className="w-full bg-life-black border border-red-900/10 rounded-lg p-3 text-xs text-life-text placeholder:text-life-muted/30 focus:outline-none focus:border-red-500/30 transition-all resize-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] text-blue-500/70 uppercase font-bold tracking-widest mb-2 flex items-center gap-1">
+                            <Target size={12} /> Tactical Notes
+                        </label>
+                        <textarea 
+                            rows={2}
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Execution tips..."
+                            className="w-full bg-life-black border border-blue-900/10 rounded-lg p-3 text-xs text-life-text placeholder:text-life-muted/30 focus:outline-none focus:border-blue-500/30 transition-all resize-none"
+                        />
+                    </div>
                 </div>
 
                 {/* Subtasks */}
@@ -339,6 +432,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
                 </div>
             </div>
 
+            {/* campaign Sync Toggle */}
+            {(isCampaign || (inheritedData && inheritedData.isCampaign)) && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-black/40 border border-[#EAB308]/30">
+                    <Target size={16} className="text-[#EAB308]" />
+                    <span className="text-[10px] text-white font-black uppercase tracking-widest flex-1">Campaign Mission Active</span>
+                    <div className="px-2 py-0.5 rounded bg-life-gold/20 text-life-gold text-[8px] font-bold border border-life-gold/30">1.2x XP</div>
+                </div>
+            )}
+
             {/* Google Calendar Sync Toggle */}
             {!initialData && scheduledTime && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-life-black border border-life-muted/20">
@@ -357,7 +459,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onClose, initialData }) => {
             {/* ACTION BUTTON */}
             <button 
                 type="submit" 
-                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-lg ${title ? 'bg-life-gold text-life-black hover:bg-yellow-400 shadow-life-gold/20' : 'bg-life-muted/10 text-life-muted cursor-not-allowed'}`}
+                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all ${title ? 'bg-[#FFD35B] text-black border-b-[3px] border-[#D1A53D] hover:bg-[#FFE082] active:translate-y-[2px] active:border-b-0' : 'bg-white/5 text-white/20 border-white/10 cursor-not-allowed border'}`}
                 disabled={!title}
             >
                 {initialData ? 'Update Mission' : 'Initiate Mission'}

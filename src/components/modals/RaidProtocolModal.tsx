@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Terminal, Shield, ScrollText, Layers, Zap, PlusSquare } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 
 const RaidProtocolModal: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [copied, setCopied] = useState(false);
     const [activeTab, setActiveTab] = useState<'basics' | 'advanced' | 'append'>('basics');
 

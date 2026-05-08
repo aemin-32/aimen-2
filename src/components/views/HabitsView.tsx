@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useHabits } from '../../contexts/HabitContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import HabitCard from '../cards/HabitCard'; // البطاقة موجودة داخل مجلد cards
 import CalendarView from './CalendarView'; // 👈 IMPORT NEW COMPONENT
 import { Habit, HabitCategory, DailyStatus } from '../../types/habitTypes';
@@ -10,7 +11,7 @@ import { Archive, ChevronDown, ChevronRight, ChevronUp, FolderPlus, Moon, Pencil
 
 const HabitsView: React.FC = () => {
   const { habitState, habitDispatch } = useHabits(); 
-  const { state, dispatch } = useLifeOS(); // Access global state
+  const { state, dispatch } = useAscension(); // Access global state
   const { habits, categories } = habitState;
   
   // 🟢 PERSISTENT VIEW MODE STATE
@@ -22,12 +23,12 @@ const HabitsView: React.FC = () => {
   
   // 🟢 PERSISTENT LOG TOGGLE
   const [showDailyLog, setShowDailyLog] = useState(() => {
-      return localStorage.getItem('LIFE_OS_LOG_OPEN') === 'true';
+      return localStorage.getItem('ASCENSION_LOG_OPEN') === 'true';
   });
 
   // Save toggle state
   useEffect(() => {
-      localStorage.setItem('LIFE_OS_LOG_OPEN', String(showDailyLog));
+      localStorage.setItem('ASCENSION_LOG_OPEN', String(showDailyLog));
   }, [showDailyLog]);
 
   const [newCatName, setNewCatName] = useState('');
@@ -184,15 +185,21 @@ const HabitsView: React.FC = () => {
             <div className="space-y-4 mb-8">
                 
                 {/* Render Categorized Habits */}
-                {categories.map(cat => {
+                {categories.map((cat, idx) => {
                     const catHabits = activeHabits.filter(h => h.categoryId === cat.id);
 
                     return (
-                        <div key={cat.id} className="animate-in slide-in-from-bottom-2">
+                        <motion.div 
+                            key={cat.id} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="animate-in slide-in-from-bottom-2"
+                        >
                             {/* Category Header */}
                             <div className="flex items-center justify-between mb-2 group relative">
                                 {editingCatId === cat.id ? (
-                                    <div className="flex gap-2 w-full">
+                                    <div className="flex gap-2 w-full animate-in fade-in zoom-in-95">
                                         <input 
                                             type="text" 
                                             value={editCatName}
@@ -208,10 +215,10 @@ const HabitsView: React.FC = () => {
                                         onClick={() => habitDispatch.toggleCategory(cat.id)}
                                         className="flex items-center gap-2 text-life-muted hover:text-life-text transition-colors flex-1 text-left py-1"
                                     >
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-life-gold/80">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-life-gold/80 group-hover:scale-110 transition-transform">
                                             {cat.isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                                         </span>
-                                        <span className="text-xs font-bold uppercase tracking-wider">{cat.title}</span>
+                                        <span className="text-xs font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">{cat.title}</span>
                                         <span className="text-[9px] bg-life-muted/10 px-1.5 rounded-full text-life-muted">{catHabits.length}</span>
                                     </button>
                                 )}
@@ -224,7 +231,7 @@ const HabitsView: React.FC = () => {
                                             setEditingCatId(cat.id); 
                                             setEditCatName(cat.title); 
                                         }}
-                                        className="p-2 text-life-muted hover:text-white hover:bg-life-muted/10 rounded cursor-pointer"
+                                        className="p-2 text-life-muted hover:text-white hover:bg-life-muted/10 rounded cursor-pointer transition-colors"
                                         title="Edit Name"
                                     >
                                         <Pencil size={14} />
@@ -234,7 +241,7 @@ const HabitsView: React.FC = () => {
                                             e.stopPropagation(); 
                                             confirmDeleteCategory(cat.id);
                                         }}
-                                        className="p-2 text-life-muted hover:text-life-hard hover:bg-life-hard/10 rounded cursor-pointer"
+                                        className="p-2 text-life-muted hover:text-life-hard hover:bg-life-hard/10 rounded cursor-pointer transition-colors"
                                         title="Delete Section"
                                     >
                                         <Trash size={14} />
@@ -243,24 +250,33 @@ const HabitsView: React.FC = () => {
                             </div>
 
                             {/* Habits List */}
-                            {!cat.isCollapsed && (
-                                <div className="space-y-1 pl-1">
-                                    {catHabits.map(habit => (
-                                        <HabitCard 
-                                            key={habit.id} 
-                                            habit={habit} 
-                                            onProcess={habitDispatch.processHabit} 
-                                            onDelete={confirmDeleteHabit} 
-                                        />
-                                    ))}
-                                    {catHabits.length === 0 && (
-                                        <div className="text-[10px] text-life-muted/40 italic pl-2 py-1">
-                                            No active protocols in section.
+                            <AnimatePresence>
+                                {!cat.isCollapsed && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="space-y-1 pl-1 pb-4">
+                                            {catHabits.map(habit => (
+                                                <HabitCard 
+                                                    key={habit.id} 
+                                                    habit={habit} 
+                                                    onProcess={habitDispatch.processHabit} 
+                                                    onDelete={confirmDeleteHabit} 
+                                                />
+                                            ))}
+                                            {catHabits.length === 0 && (
+                                                <div className="text-[10px] text-life-muted/40 italic pl-2 py-1">
+                                                    No active protocols in section.
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     );
                 })}
 
@@ -296,7 +312,7 @@ const HabitsView: React.FC = () => {
                 <div className="animate-in slide-in-from-bottom-2 fade-in mb-4">
                     <button 
                         onClick={() => setShowDailyLog(!showDailyLog)}
-                        className="w-full flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-life-paper hover:bg-life-muted/5 transition-all mb-3 group shadow-sm"
+                        className="w-full flex items-center justify-between p-3 rounded-lg border border-zinc-900 bg-[#050505] hover:bg-zinc-900/40 transition-all mb-3 group shadow-none"
                     >
                         <div className="flex items-center gap-2">
                             <Archive size={16} className="text-life-gold group-hover:scale-110 transition-transform" />

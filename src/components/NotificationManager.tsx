@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { LocalNotifications, ActionPerformed } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { useTasks } from '../contexts/TaskContext';
 import { useHabits } from '../contexts/HabitContext';
 import { useRaids } from '../contexts/RaidContext';
@@ -11,7 +11,7 @@ import { playSound } from '../utils/audio';
 import { checkHabitActive } from '../utils/habitEngine';
 
 const NotificationManager: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { taskState, taskDispatch } = useTasks();
     const { habitState, habitDispatch } = useHabits();
     const { raidState, raidDispatch } = useRaids();
@@ -86,7 +86,7 @@ const NotificationManager: React.FC = () => {
             const xpProgress = Math.floor((state.user.dailyXP / state.user.dailyTarget) * 100);
 
             // Construct Content
-            const title = `LifeOS Active: ${totalPending} Pending`;
+            const title = `Ascension Active: ${totalPending} Pending`;
             const body = `⚔️ ${activeTasks.length} Missions  •  🔄 ${activeHabits.length} Protocols  •  ⚡ ${xpProgress}% XP`;
 
             // Only update if content changed to save battery

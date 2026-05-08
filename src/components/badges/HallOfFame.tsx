@@ -5,7 +5,7 @@ import { useBadges } from '../../contexts/BadgeContext';
 import { BadgeCategory } from '../../types/badgeTypes';
 import BadgeModal from './BadgeModal';
 
-const CATEGORIES: { id: BadgeCategory | 'all' | 'honor', label: string }[] = [
+const CATEGORIES: { id: BadgeCategory | 'all', label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'raids', label: 'Raids' },
     { id: 'habits', label: 'Habits' },
@@ -14,22 +14,19 @@ const CATEGORIES: { id: BadgeCategory | 'all' | 'honor', label: string }[] = [
     { id: 'consequences', label: 'Consequences' },
     { id: 'shop', label: 'Shop' },
     { id: 'campaign', label: 'Campaign' },
-    { id: 'honor', label: 'Honor' },
     { id: 'progression', label: 'Progression' },
 ];
 
 const HallOfFame: React.FC = () => {
     const { getAllBadges } = useBadges();
     const badges = getAllBadges();
-    const [filter, setFilter] = useState<BadgeCategory | 'all' | 'honor'>('all');
+    const [filter, setFilter] = useState<BadgeCategory | 'all'>('all');
     const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
     const [showStats, setShowStats] = useState(false);
 
     const filteredBadges = filter === 'all' 
         ? badges 
-        : filter === 'honor' 
-            ? badges.filter(b => b.badge.id.startsWith('bdg_honor_')) // 👈 Filter by ID prefix for Honor badges
-            : badges.filter(b => b.badge.category === filter);
+        : badges.filter(b => b.badge.category === filter);
 
     const selectedBadgeData = selectedBadgeId ? badges.find(b => b.badge.id === selectedBadgeId) : null;
 
@@ -163,9 +160,7 @@ const HallOfFame: React.FC = () => {
             <div className="space-y-8">
                 {filter === 'all' ? (
                     CATEGORIES.filter(c => c.id !== 'all').map(cat => {
-                        const catBadges = cat.id === 'honor' 
-                            ? badges.filter(b => b.badge.id.startsWith('bdg_honor_'))
-                            : badges.filter(b => b.badge.category === cat.id);
+                        const catBadges = badges.filter(b => b.badge.category === cat.id);
                         
                         if (catBadges.length === 0) return null;
 

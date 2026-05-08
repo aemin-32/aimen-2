@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { toRoman } from '../../utils/roman-helpers';
 import { Plus, Trash2, Dumbbell, Brain, Zap, Heart, Activity, ChevronRight, BookOpen, Calendar, FileText, CheckSquare, Bell, Palette, Flame, Users, Coins, Clock, ChevronDown, ChevronUp, AlignLeft } from 'lucide-react';
 import { useRaids } from '../../contexts/RaidContext';
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { Raid, RaidStep, PendingRaidStep } from '../../types/raidTypes';
 import { Difficulty, Stat } from '../../types/types';
 import { DIFFICULTY_COLORS, DIFFICULTY_BG, STAT_COLORS } from '../../types/constants';
@@ -20,7 +21,7 @@ const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().
 const RaidForm: React.FC<RaidFormProps> = ({ onClose, initialData }) => {
     const { raidDispatch } = useRaids();
     const { skillState } = useSkills();
-    const { state } = useLifeOS();
+    const { state } = useAscension();
     
     // Basic Info
     const [title, setTitle] = useState('');
@@ -275,7 +276,7 @@ const RaidForm: React.FC<RaidFormProps> = ({ onClose, initialData }) => {
                                 >
                                     <option value="">Select a Skill...</option>
                                     {skillState.skills.map(skill => (
-                                        <option key={skill.id} value={skill.id}>{skill.title} (Lvl {skill.level})</option>
+                                        <option key={skill.id} value={skill.id}>{skill.title} ({toRoman(skill.level)})</option>
                                     ))}
                                 </select>
                                 <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-life-muted rotate-90 pointer-events-none" size={14} />
@@ -383,7 +384,7 @@ const RaidForm: React.FC<RaidFormProps> = ({ onClose, initialData }) => {
             {/* ACTION BUTTON */}
             <button 
                 type="submit" 
-                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-lg ${title ? 'bg-life-gold text-life-black hover:bg-yellow-400 shadow-life-gold/20' : 'bg-life-muted/10 text-life-muted cursor-not-allowed'}`}
+                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all ${title ? 'bg-[#FFD35B] text-black border-b-[3px] border-[#D1A53D] hover:bg-[#FFE082] active:translate-y-[2px] active:border-b-0' : 'bg-white/5 text-white/20 border-white/10 cursor-not-allowed border'}`}
                 disabled={!title}
             >
                 {initialData ? 'Update Operation' : 'Launch Operation'}

@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock, Brain, Dumbbell, Activity, Heart, Zap, Shield, BookOpen, Play, AlignLeft, Calendar, FolderInput, Maximize2, Trash2, Target, Bell, Palette, CalendarPlus, Coins, Users, Flame } from 'lucide-react';
 import { Task } from '../../types/taskTypes';
 import { Stat, Difficulty } from '../../types/types';
 import { DIFFICULTY_COLORS, STAT_COLORS } from '../../types/constants';
 import { useSkills } from '../../contexts/SkillContext';
 import { useTasks } from '../../contexts/TaskContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useCampaign } from '../../contexts/CampaignContext'; 
 import { getCampaignTimeCode } from '../../utils/campaignEngine';
 import { openInGoogleCalendar } from '../../utils/googleCalendar'; 
@@ -33,7 +34,7 @@ const StatIcon = ({ stat, size = 14 }: { stat: Stat; size?: number }) => {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
-  const { dispatch, state } = useLifeOS(); 
+  const { dispatch, state } = useAscension(); 
   const { skillState } = useSkills();
   const { taskState, taskDispatch } = useTasks(); 
   const { campaignState } = useCampaign(); 
@@ -96,25 +97,52 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
 
   const remindersCount = task.reminders ? task.reminders.length : 0;
 
+  const isAscending = state.ui.systemAscending.isActive;
+
   return (
-    <div 
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      transition={isAscending ? { duration: 0.15, ease: "linear" } : undefined}
       onClick={() => setIsExpanded(!isExpanded)}
       className={`
-        relative group flex flex-col p-4 mb-3 rounded-xl border border-zinc-800 bg-life-black/40 backdrop-blur-sm shadow-sm cursor-pointer transition-all duration-300 overflow-hidden
+        relative group flex flex-col p-4 mb-3 rounded-xl transition-all duration-300 overflow-hidden cursor-pointer shadow-none
         ${task.isCompleted 
-            ? 'opacity-50 grayscale border-gray-800' 
-            : `hover:border-zinc-700 hover:bg-life-black/60 hover:shadow-md`}
-        ${isExpanded ? 'ring-1 ring-life-gold/20 bg-life-black/80' : ''}
+            ? 'opacity-50 grayscale border-white/5 bg-black' 
+            : `bg-black`}
+        ${isExpanded ? 'bg-black' : ''}
       `}
+      style={{
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: 'none !important',
+        filter: 'none !important',
+        WebkitFilter: 'none !important',
+      }}
     >
-      {/* 🟢 LEFT BORDER INDICATOR (Difficulty) */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${borderColorClass.replace('border-', 'bg-')}`} />
+      {/* 🟢 GLASS GLOSS REFLECTION */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.05]"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,1) 0%, transparent 50%)',
+        }}
+      />
+
+      {/* 🔴 VERTICAL DIFFICULTY BAR (Extreme Left) */}
+      <div 
+        className={`absolute left-0 top-0 bottom-0 w-1 ${borderColorClass.replace('border-', 'bg-')}`} 
+        style={{ width: '4px' }}
+      />
       {/* 🟢 SUBTASK PROGRESS BAR (Background) */}
       {totalSubtasks > 0 && !task.isCompleted && (
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-life-muted/10">
-               <div 
+               <motion.div 
+                 initial={{ width: 0 }}
+                 animate={{ width: `${subtaskProgress}%` }}
                  className="h-full bg-life-gold transition-all duration-500" 
-                 style={{ width: `${subtaskProgress}%` }} 
                />
           </div>
       )}
@@ -122,27 +150,39 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
       <div className="flex items-center w-full">
         {/* 🟢 CHECKBOX AREA */}
         <div className="mr-4 relative">
-            <div 
+            <motion.div 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => { e.stopPropagation(); onToggle(task.id); }}
                 className={`
-                w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-300 hover:scale-110
+                w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-300
                 ${task.isCompleted 
                     ? 'bg-life-easy border-life-easy text-life-black' 
                     : 'border-life-muted group-hover:border-life-silver bg-transparent'}
                 `}
             >
-            <Check size={16} className={`transition-transform duration-300 ${task.isCompleted ? 'scale-100' : 'scale-0'}`} strokeWidth={3} />
-            </div>
+            <AnimatePresence>
+                {task.isCompleted && (
+                    <motion.div
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 45 }}
+                    >
+                        <Check size={16} strokeWidth={3} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            </motion.div>
         </div>
 
         {/* 🟢 HEADER CONTENT */}
         <div className="flex-1 min-w-0">
             {/* Metadata Row */}
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                 
                 {/* 🔵 G12 BADGE (INDIGO) */}
                 {task.isCampaign && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded border border-indigo-500/50 bg-indigo-500/10 text-indigo-300 flex items-center gap-1 uppercase tracking-wider shadow-[0_0_8px_rgba(99,102,241,0.2)]">
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded border border-indigo-500/50 bg-indigo-500/10 text-indigo-300 flex items-center gap-1 uppercase tracking-wider">
                         <Target size={10} /> 
                         {g12Code ? `G12 • ${g12Code}` : 'G12'}
                     </span>
@@ -150,22 +190,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
 
                 {/* 🔵 C30 BADGE (BLUE) - CALENDAR ORIGIN */}
                 {task.isCalendarEvent && !task.isCampaign && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded border border-blue-500/50 bg-blue-500/10 text-blue-300 flex items-center gap-1 uppercase tracking-wider shadow-[0_0_8px_rgba(59,130,246,0.2)]">
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded border border-blue-500/50 bg-blue-500/10 text-blue-300 flex items-center gap-1 uppercase tracking-wider">
                         <Calendar size={10} /> C30
                     </span>
                 )}
 
-                {/* 🟢 STAT DISPLAY (Only if no skill linked) */}
+                {/* 🟢 STAT DISPLAY (Subtle Sector Labels) */}
                 {!linkedSkill && (
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 uppercase tracking-wider ${task.isCompleted ? 'border-gray-600 text-gray-500' : ''}`} style={{ borderColor: task.isCompleted ? undefined : `${statColor}40`, color: task.isCompleted ? undefined : statColor, backgroundColor: task.isCompleted ? undefined : `${statColor}10` }}>
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 uppercase tracking-[0.15em] transition-all`} style={{ color: statColor }}>
                         <StatIcon stat={task.stat} size={10} />
                         {task.stat}
                     </span>
                 )}
                 
-                {/* 🟢 XP VALUE BADGE (NEW) */}
+                {/* 🟡 XP VALUE BADGE (Premium Gold Refresh) */}
                 {!task.isCompleted && (
-                    <span className="text-[9px] font-mono font-bold text-life-muted bg-life-black px-1.5 py-0.5 rounded border border-life-muted/20">
+                    <span className="text-[9px] font-mono font-black text-black bg-[#EAB308] px-2 py-0.5 rounded-sm border border-black/10">
                         +{xpValue} XP
                     </span>
                 )}
@@ -187,7 +227,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
                 )}
             </div>
             
-            <h3 className={`text-sm font-medium truncate pr-2 ${task.isCompleted ? 'line-through text-life-muted' : 'text-life-text'}`}>
+            <h3 className={`text-[10px] font-black uppercase tracking-tight truncate pr-2 ${task.isCompleted ? 'line-through text-zinc-600' : 'text-white'}`}>
                 {task.title}
             </h3>
         </div>
@@ -293,7 +333,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggle, onDelete }) => {
               </div>
           </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

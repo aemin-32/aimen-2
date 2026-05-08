@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { toRoman } from '../../utils/roman-helpers';
 import { Brain, Dumbbell, Activity, Heart, Zap, Shield, AlertTriangle, Palette, Coins, Users, Flame } from 'lucide-react';
 // --- تصحيح المسارات (العودة خطوتين للوراء ../../) ---
 import { Skill, SkillRank } from '../../types/skillTypes';
@@ -40,11 +42,17 @@ const SkillCard: React.FC<SkillCardProps> = ({ skill }) => {
     const rankTextColor = rankColorClass.split(' ')[0]; 
 
     return (
-        <div 
+        <motion.div 
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => skillDispatch.setActiveSkill(skill.id)} // 👈 Open Details on Click
             className={`
                 relative bg-life-paper border rounded-xl overflow-hidden mb-3 transition-all duration-200 
-                hover:bg-life-muted/5 hover:scale-[1.01] active:scale-[0.99] cursor-pointer group 
+                hover:bg-life-muted/5 cursor-pointer group 
                 ${skill.isRusty ? 'border-orange-900/50' : 'border-zinc-800'}
             `}
         >
@@ -93,23 +101,32 @@ const SkillCard: React.FC<SkillCardProps> = ({ skill }) => {
                 {/* 🟢 PROGRESS BAR */}
                 <div className="relative pt-1">
                     <div className="flex justify-between text-[10px] font-mono font-bold mb-1">
-                        <span className={rankTextColor}>LVL {skill.level}</span>
-                        <span className="text-life-muted">{skill.currentXP} / {skill.targetXP} XP</span>
+                        <span className={rankTextColor}>{toRoman(skill.level)}</span>
+                        <span className="text-[#FFD35B] drop-shadow-[0_0_5px_rgba(255,211,91,0.3)]">{skill.currentXP} / {skill.targetXP} XP</span>
                     </div>
-                    <div className="h-1.5 w-full bg-life-black rounded-full overflow-hidden border border-zinc-800">
-                        <div 
-                            className={`h-full transition-all duration-700 ${skill.isRusty ? 'bg-life-muted' : 'bg-current'}`}
+                    <div className="h-1.5 w-full bg-life-black rounded-full overflow-hidden border border-zinc-800 relative">
+                        <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progressPercent}%` }}
+                            className={`h-full transition-all duration-700 relative ${skill.isRusty ? 'bg-life-muted' : 'bg-[#FFD35B]'}`}
                             style={{ 
-                                width: `${progressPercent}%`,
-                                color: skill.rank === 'Novice' ? '#9ca3af' : undefined // Fallback color
+                                boxShadow: !skill.isRusty ? '0 0 10px #FFD35B' : 'none',
                             }} 
                         >
-                             <div className={`w-full h-full ${rankTextColor.replace('text-', 'bg-')} opacity-80 shadow-[0_0_10px_currentColor]`} />
-                        </div>
+                            {!skill.isRusty && (
+                                <>
+                                    {/* 1px White Core */}
+                                    <div className="absolute inset-x-0 top-[0.5px] h-[0.5px] bg-white/80 rounded-full z-10" />
+                                    
+                                    {/* Light Bleed */}
+                                    <div className="absolute inset-0 bg-white blur-[1px] opacity-20" />
+                                </>
+                            )}
+                        </motion.div>
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

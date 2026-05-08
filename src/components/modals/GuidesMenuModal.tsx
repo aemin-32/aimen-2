@@ -1,12 +1,12 @@
 import React from 'react';
 import { X, Brain, Activity, ShoppingCart, Coins, ShieldCheck, Scale, Star, Download, FileText } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { GUIDES } from '../../utils/guideTexts';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 const GuidesMenuModal: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
 
     const handleDownloadAll = async () => {
         try {
@@ -17,7 +17,7 @@ const GuidesMenuModal: React.FC = () => {
             });
 
             const content = await zip.generateAsync({ type: 'blob' });
-            saveAs(content, 'LifeOS_AI_Protocols.zip');
+            saveAs(content, 'Ascension_AI_Protocols.zip');
             dispatch.addToast('Protocols Downloaded Successfully', 'success');
         } catch (error) {
             console.error('Failed to download guides:', error);

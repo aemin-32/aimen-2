@@ -1,8 +1,8 @@
 import React from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 
 export const LogTab: React.FC = () => {
-    const { state } = useLifeOS();
+    const { state } = useAscension();
 
     return (
         <div className="space-y-2 animate-in fade-in">

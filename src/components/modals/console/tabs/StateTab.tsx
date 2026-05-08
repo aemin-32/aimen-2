@@ -1,9 +1,9 @@
 import React from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 import { Eye } from 'lucide-react';
 
 export const StateTab: React.FC = () => {
-    const { state } = useLifeOS();
+    const { state } = useAscension();
 
     return (
         <div className="p-3 bg-life-black border border-life-muted/20 rounded animate-in fade-in">

@@ -45,7 +45,7 @@ class ErrorBoundary extends Component<Props, State> {
             </button>
           </div>
           <p className="mt-8 text-[10px] text-gray-600 font-mono uppercase">
-            LifeOS Kernel Panic • v0.0.1
+            Ascension Kernel Panic • v0.0.1
           </p>
         </div>
       );

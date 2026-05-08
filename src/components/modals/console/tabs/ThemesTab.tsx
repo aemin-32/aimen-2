@@ -1,9 +1,9 @@
 import React from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 import { Check } from 'lucide-react';
 
 export const ThemesTab: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
 
     return (
         <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-right-2">

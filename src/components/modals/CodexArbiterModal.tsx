@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Terminal, Scale, ScrollText, Gavel } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
 import { useRaids } from '../../contexts/RaidContext';
 import { useShop } from '../../contexts/ShopContext';
 
 const CodexArbiterModal: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { taskState } = useTasks();
     const { habitState } = useHabits();
     const { raidState } = useRaids();
@@ -47,7 +47,7 @@ const CodexArbiterModal: React.FC = () => {
 
     const PROMPT_TEXT = `
 ROLE: You are the Codex Arbiter (AI_CODEX_GEN).
-GOAL: Analyze the user's LifeOS data and generate a strict "Codex of Laws" (Consequences) to enforce discipline.
+GOAL: Analyze the user's Ascension data and generate a strict "Codex of Laws" (Consequences) to enforce discipline.
 
 USER DATA SNAPSHOT:
 ${JSON.stringify(userData, null, 2)}
@@ -72,7 +72,7 @@ PENALTY GUIDELINES (DO NOT EXAGGERATE PUNISHMENT):
   "laws": [
     {
       "title": "Law Name (e.g. Neglect of [Habit])",
-      "penaltyType": "gold" | "xp" | "stat" | "honor",
+      "penaltyType": "gold" | "xp" | "stat",
       "penaltyValue": 50,
       "statTarget": "DIS" (only if penaltyType is 'stat')
     }

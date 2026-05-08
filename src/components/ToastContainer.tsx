@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { CheckCircle, AlertTriangle, Trophy, Info, X, Zap } from 'lucide-react';
 import { Toast } from '../types/types';
 
@@ -106,7 +106,7 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: (id: string) => void }> = (
 };
 
 const ToastContainer: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { toasts } = state.ui;
 
     if (toasts.length === 0) return null;

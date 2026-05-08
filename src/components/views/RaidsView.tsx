@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 // --- تصحيح المسارات ---
 import { useRaids } from '../../contexts/RaidContext'; // الدخول لمجلد contexts
 import RaidCard from '../cards/RaidCard';
@@ -51,8 +52,14 @@ const RaidsView: React.FC = () => {
       {/* 🟢 ACTIVE RAIDS LIST */}
       <div className="space-y-4">
         {activeRaids.length > 0 ? (
-          activeRaids.map(raid => (
-            <div key={raid.id} className="relative group">
+          activeRaids.map((raid, idx) => (
+            <motion.div 
+              key={raid.id} 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="relative group"
+            >
                 <RaidCard 
                   raid={raid} 
                   onToggleStep={raidDispatch.toggleRaidStep} 
@@ -75,7 +82,7 @@ const RaidsView: React.FC = () => {
                         <Trash2 size={12} />
                     </button>
                 </div>
-            </div>
+            </motion.div>
           ))
         ) : (
           <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl bg-life-paper/30">

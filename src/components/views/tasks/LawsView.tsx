@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ShieldAlert, Gavel, Plus, X, Coins, Zap, Activity, Pencil, Check, Award, BookOpen } from 'lucide-react';
+import { ShieldAlert, Gavel, Plus, X, Coins, Zap, Activity, Pencil, Check, BookOpen } from 'lucide-react';
 import { useTasks } from '../../../contexts/TaskContext';
 import { Stat } from '../../../types/types';
 import { STAT_COLORS } from '../../../types/constants';
@@ -12,7 +12,7 @@ export const LawsView: React.FC = () => {
 
     // Form State (Adding)
     const [title, setTitle] = useState('');
-    const [penaltyType, setPenaltyType] = useState<'gold' | 'xp' | 'stat' | 'honor'>('honor');
+    const [penaltyType, setPenaltyType] = useState<'gold' | 'xp' | 'stat'>('gold');
     const [penaltyValue, setPenaltyValue] = useState<number>(50);
     const [selectedStat, setSelectedStat] = useState<Stat>(Stat.DIS);
     const [isAdding, setIsAdding] = useState(false);
@@ -21,7 +21,7 @@ export const LawsView: React.FC = () => {
     // Edit State
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
-    const [editType, setEditType] = useState<'gold' | 'xp' | 'stat' | 'honor'>('honor');
+    const [editType, setEditType] = useState<'gold' | 'xp' | 'stat'>('gold');
     const [editValue, setEditValue] = useState(0);
     const [editStat, setEditStat] = useState<Stat>(Stat.DIS);
 
@@ -64,8 +64,8 @@ export const LawsView: React.FC = () => {
         <div className="animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
             
             {/* 🛑 HEADER INFO */}
-            <div className="bg-red-950/20 border border-red-900/50 p-4 rounded-xl mb-6 text-center relative">
-                <ShieldAlert className="w-8 h-8 text-red-500 mx-auto mb-2 animate-pulse" />
+            <div className="bg-red-950/10 border border-red-900/40 p-4 rounded-xl mb-6 text-center relative shadow-none">
+                <ShieldAlert className="w-8 h-8 text-red-500 mx-auto mb-2" />
                 <h2 className="text-lg font-black text-red-500 uppercase tracking-widest mb-1">The Codex</h2>
                 <p className="text-[10px] text-red-400/70 font-mono uppercase tracking-wider">
                     "He who cannot obey himself will be commanded."
@@ -99,7 +99,6 @@ export const LawsView: React.FC = () => {
                                 />
                                 <div className="flex gap-2">
                                     <div className="flex-1 flex bg-[#0a0a0a] rounded-lg p-1 border border-red-900/30">
-                                        <button type="button" onClick={() => setEditType('honor')} className={`flex-1 py-1 rounded text-[9px] font-bold ${editType === 'honor' ? 'bg-indigo-500 text-white' : 'text-zinc-500'}`}><Award size={10} className="mx-auto" /></button>
                                         <button type="button" onClick={() => setEditType('gold')} className={`flex-1 py-1 rounded text-[9px] font-bold ${editType === 'gold' ? 'bg-life-gold text-black' : 'text-zinc-500'}`}><Coins size={10} className="mx-auto" /></button>
                                         <button type="button" onClick={() => setEditType('xp')} className={`flex-1 py-1 rounded text-[9px] font-bold ${editType === 'xp' ? 'bg-blue-500 text-white' : 'text-zinc-500'}`}><Zap size={10} className="mx-auto" /></button>
                                         <button type="button" onClick={() => setEditType('stat')} className={`flex-1 py-1 rounded text-[9px] font-bold ${editType === 'stat' ? 'bg-purple-500 text-white' : 'text-zinc-500'}`}><Activity size={10} className="mx-auto" /></button>
@@ -151,7 +150,7 @@ export const LawsView: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <button 
                                     onClick={() => taskDispatch.enforceLaw(law.id)}
-                                    className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1 mr-1"
+                                    className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg shadow-none hover:scale-105 active:scale-95 transition-all flex items-center gap-1 mr-1"
                                 >
                                     <Gavel size={12} /> Pay Fine
                                 </button>
@@ -208,7 +207,6 @@ export const LawsView: React.FC = () => {
                             <div>
                                 <label className="block text-[9px] text-red-500 uppercase font-bold tracking-widest mb-2">Penalty Type</label>
                                 <div className="flex bg-[#0a0a0a] rounded-lg p-1 border border-red-900/30">
-                                    <button type="button" onClick={() => setPenaltyType('honor')} className={`flex-1 py-1.5 rounded text-[10px] font-bold ${penaltyType === 'honor' ? 'bg-indigo-500 text-white' : 'text-zinc-500'}`} title="Honor"><Award size={12} className="mx-auto" /></button>
                                     <button type="button" onClick={() => setPenaltyType('gold')} className={`flex-1 py-1.5 rounded text-[10px] font-bold ${penaltyType === 'gold' ? 'bg-life-gold text-black' : 'text-zinc-500'}`} title="Gold"><Coins size={12} className="mx-auto" /></button>
                                     <button type="button" onClick={() => setPenaltyType('xp')} className={`flex-1 py-1.5 rounded text-[10px] font-bold ${penaltyType === 'xp' ? 'bg-blue-500 text-white' : 'text-zinc-500'}`} title="XP"><Zap size={12} className="mx-auto" /></button>
                                     <button type="button" onClick={() => setPenaltyType('stat')} className={`flex-1 py-1.5 rounded text-[10px] font-bold ${penaltyType === 'stat' ? 'bg-purple-500 text-white' : 'text-zinc-500'}`} title="Stat"><Activity size={12} className="mx-auto" /></button>
@@ -246,7 +244,7 @@ export const LawsView: React.FC = () => {
 
                         <div className="flex gap-2">
                             <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-2 rounded-lg border border-zinc-800 text-zinc-500 text-[10px] font-bold uppercase hover:bg-zinc-900">Cancel</button>
-                            <button type="submit" className="flex-1 py-2 rounded-lg bg-red-600 text-white text-[10px] font-bold uppercase hover:bg-red-500 shadow-[0_0_10px_rgba(220,38,38,0.3)]">Confirm Law</button>
+                            <button type="submit" className="flex-1 py-2 rounded-lg bg-red-600 text-white text-[10px] font-bold uppercase hover:bg-red-500 shadow-none">Confirm Law</button>
                         </div>
                     </form>
                 )}

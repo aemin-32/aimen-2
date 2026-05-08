@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Terminal, Download, CheckCircle, Database, ShieldCheck, ShieldAlert, AlignLeft, RotateCcw, Loader2, Sparkles, ShieldX, Upload, FileJson } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 import { useTasks } from '../../contexts/TaskContext';
 import { useHabits } from '../../contexts/HabitContext';
 import { useRaids } from '../../contexts/RaidContext';
@@ -18,7 +18,7 @@ interface InjectionFormProps {
 
 const InjectionForm: React.FC<InjectionFormProps> = ({ onClose }) => {
     // Collect all dispatchers & state for context aware validation
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { taskState, taskDispatch } = useTasks(); // 👈 Destructure taskState
     const { habitState, habitDispatch } = useHabits();
     const { raidState, raidDispatch } = useRaids();
@@ -75,7 +75,7 @@ const InjectionForm: React.FC<InjectionFormProps> = ({ onClose }) => {
 
         return `
         ROLE: You are the "Refiner Node" (QA & Compiler).
-        TASK: Validate and Fix the INCOMING JSON Payload for the LifeOS System.
+        TASK: Validate and Fix the INCOMING JSON Payload for the Ascension System.
         
         CURRENT DATABASE SNAPSHOT:
         - Existing Habits: [${habitsList}]
@@ -93,8 +93,8 @@ const InjectionForm: React.FC<InjectionFormProps> = ({ onClose }) => {
         
         2. LAWS & CONSEQUENCES:
            - If the input describes a rule, punishment, or consequence (e.g., "If I upset my girlfriend, deduct Emotion points"), convert it into a "laws" array.
-           - Structure: { "title": "Short Title", "penaltyType": "gold" | "xp" | "stat" | "honor", "penaltyValue": number, "statTarget": "STR" | "INT" | "DIS" | "HEA" | "CRT" | "SPR" | "REL" | "FIN" (only if type is stat) }
-           - Example: "If I miss prayer, lose 50 Honor" -> { "laws": [{ "title": "Missed Prayer", "penaltyType": "honor", "penaltyValue": 50 }] }
+           - Structure: { "title": "Short Title", "penaltyType": "gold" | "xp" | "stat", "penaltyValue": number, "statTarget": "STR" | "INT" | "DIS" | "HEA" | "CRT" | "SPR" | "REL" | "FIN" (only if type is stat) }
+           - Example: "If I miss prayer, lose 50 Gold" -> { "laws": [{ "title": "Missed Prayer", "penaltyType": "gold", "penaltyValue": 50 }] }
 
         3. STRUCTURE: Ensure strict valid JSON. No trailing commas.
         4. OUTPUT:

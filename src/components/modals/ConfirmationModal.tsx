@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { AlertTriangle, Trash2, X, Check } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 const ConfirmationModal: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { modalData } = state.ui;
 
     if (!modalData) return null;

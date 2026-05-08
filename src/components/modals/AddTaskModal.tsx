@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { X, CheckSquare, Target, Crosshair, Terminal } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext'; // نرجع خطوتين للوصول للسياق
+import { useAscension } from '../../contexts/AscensionContext'; // نرجع خطوتين للوصول للسياق
 import TaskForm from '../forms/TaskForm';      // نخرج من modals وندخل forms (جيران)
 import HabitForm from '../forms/HabitForm';    // نفس الشيء
 import RaidForm from '../forms/RaidForm';      // نفس الشيء
@@ -10,13 +10,15 @@ import InjectionForm from '../forms/InjectionForm'; // 👈 استيراد نم�
 type CreateType = 'mission' | 'protocol' | 'operation' | 'injection'; // 👈 إضافة نوع الحقن
 
 const AddTaskModal: React.FC = () => {
-  const { state, dispatch } = useLifeOS();
+  const { state, dispatch } = useAscension();
   const { modalData } = state.ui;
 
   // 🟢 INITIALIZE STATE BASED ON CONTEXT
   const [createType, setCreateType] = useState<CreateType>(() => {
-      if (modalData && modalData.defaultType) {
-          return modalData.defaultType as CreateType;
+      if (modalData) {
+          if (modalData.editTask) return 'mission';
+          if (modalData.editHabit) return 'protocol';
+          if (modalData.defaultType) return modalData.defaultType as CreateType;
       }
       return 'mission';
   });
@@ -96,8 +98,8 @@ const AddTaskModal: React.FC = () => {
 
         {/* 🟢 SCROLLABLE FORM BODY */}
         <div className="flex-1 overflow-y-auto p-6 min-h-[300px]">
-            {createType === 'mission' && <TaskForm onClose={handleModalClose} />}
-            {createType === 'protocol' && <HabitForm onClose={handleModalClose} />}
+            {createType === 'mission' && <TaskForm onClose={handleModalClose} inheritedData={modalData} />}
+            {createType === 'protocol' && <HabitForm onClose={handleModalClose} inheritedData={modalData} />}
             {createType === 'operation' && <RaidForm onClose={handleModalClose} />}
             {/* 🟢 عرض نموذج الحقن */}
             {createType === 'injection' && <InjectionForm onClose={handleModalClose} />}

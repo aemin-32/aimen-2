@@ -1,8 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, Lock, Trophy, Calendar, Pin, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 import { BadgeProgress, BadgeTier } from '@/src/types/badgeTypes';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
+import BadgeAnimation from './BadgeAnimation';
+import { playMonkSound, playTitanSound } from '../../utils/audio';
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface BadgeModalProps {
     data: BadgeProgress;
     onClose: () => void;
@@ -17,16 +21,13 @@ const TIER_COLORS: Record<BadgeTier, string> = {
 
 const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
     const { badge, currentTier, history, currentValue } = data;
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { user } = state;
 
     // 1. Determine Initial View (Start at current level or 0)
     const getInitialIndex = () => {
         if (!currentTier) return 0;
         const idx = badge.levels.findIndex(l => l.tier === currentTier);
-        // If current tier is unlocked, maybe show the next one? 
-        // For now, let's show the highest unlocked tier so they feel proud, 
-        // unless it's maxed, then show max.
         return idx >= 0 ? idx : 0;
     };
 
@@ -36,6 +37,51 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
     // View Logic
     const viewTier = activeLevel.tier;
     const isUnlocked = !!history[viewTier];
+
+    // Cinematic Video Background Logic
+    const [bgVideo, setBgVideo] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        const loadVideo = async () => {
+            // Only load for Titan Silver (as requested)
+            if (badge.id === 'bdg_titan' && viewTier === 'silver') {
+                // High-quality sparks/fire video (God of War vibe)
+                const videoUrl = 'https://assets.mixkit.co/videos/preview/mixkit-fire-sparks-in-the-dark-41610-large.mp4';
+                try {
+                    const cache = await caches.open('ascension-media-cache');
+                    const cachedResponse = await cache.match(videoUrl);
+                    
+                    if (cachedResponse) {
+                        const blob = await cachedResponse.blob();
+                        if (isMounted) setBgVideo(URL.createObjectURL(blob));
+                    } else {
+                        if (isMounted) setBgVideo(videoUrl); // Play immediately from network
+                        const networkResponse = await fetch(videoUrl);
+                        if (networkResponse.ok) {
+                            await cache.put(videoUrl, networkResponse.clone()); // Cache for next time
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to cache video", e);
+                    if (isMounted) setBgVideo(videoUrl);
+                }
+            } else {
+                if (isMounted) setBgVideo(null);
+            }
+        };
+        loadVideo();
+        return () => { isMounted = false; };
+    }, [badge.id, viewTier]);
+
+    // Play sound on view change
+    useEffect(() => {
+        if (badge.id === 'bdg_monk') {
+            playMonkSound(viewTier);
+        } else if (badge.id === 'bdg_titan') {
+            playTitanSound(viewTier);
+        }
+    }, [viewIndex, badge.id, viewTier]);
     
     // Check if this level is the *current active target*
     // It is the target if: It's NOT unlocked, AND (it's the first level OR the previous level IS unlocked)
@@ -91,15 +137,39 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
     }
 
     return (
-        <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-life-paper border border-life-muted/20 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 flex flex-col">
+        <div onClick={onClose} className={`fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300 ${viewTier === 'crimson' && badge.id === 'bdg_titan' ? 'overflow-hidden' : ''}`}>
+            <motion.div 
+                onClick={(e) => e.stopPropagation()} 
+                animate={viewTier === 'crimson' && badge.id === 'bdg_titan' ? {
+                    x: [-1, 1, -1, 1, 0],
+                    y: [1, -1, 1, -1, 0]
+                } : {}}
+                transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 1 }}
+                className="relative w-full max-w-sm bg-life-paper border border-life-muted/20 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 flex flex-col"
+            >
                 
+                {/* 🎬 CINEMATIC VIDEO BACKGROUND */}
+                {bgVideo && (
+                    <div className="absolute inset-0 z-0 pointer-events-none">
+                        <video 
+                            src={bgVideo} 
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline
+                            className="w-full h-full object-cover opacity-60 mix-blend-screen"
+                        />
+                        {/* Gradient overlay to ensure text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-life-paper/30 via-life-paper/80 to-life-paper" />
+                    </div>
+                )}
+
                 {/* 🟢 DYNAMIC HEADER (Changes color based on Tier) */}
-                <div className={`relative p-6 text-center border-b border-life-muted/10 overflow-hidden transition-colors duration-500 ${viewTier === 'crimson' ? 'bg-red-900/10' : ''}`}>
+                <div className={`relative z-10 p-6 text-center border-b border-life-muted/10 overflow-hidden transition-colors duration-500 ${bgVideo ? 'bg-transparent' : (viewTier === 'crimson' ? 'bg-red-900/10' : '')}`}>
                     {/* Background Glow */}
                     <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-current opacity-10 blur-[60px] rounded-full pointer-events-none transition-colors duration-500 ${textColor}`} />
                     
-                    <button onClick={onClose} className="absolute top-4 right-4 text-life-muted hover:text-white z-20">
+                    <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-black/20 text-life-muted hover:text-white z-20 transition-colors">
                         <X size={20} />
                     </button>
 
@@ -107,7 +177,7 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                     {currentTier && (
                         <button 
                             onClick={togglePin}
-                            className={`absolute top-4 left-4 p-2 rounded-full border transition-all z-20 ${isPinned ? 'bg-life-gold text-life-black border-life-gold' : 'bg-transparent text-life-muted border-life-muted/20 hover:text-white'}`}
+                            className={`absolute top-4 left-4 p-2 rounded-full border transition-all z-20 ${isPinned ? 'bg-life-gold text-life-black border-life-gold' : 'bg-black/40 text-life-muted border-white/10 hover:text-white'}`}
                             title={isPinned ? "Unpin" : "Pin to Profile"}
                         >
                             <Pin size={16} className={isPinned ? 'fill-current' : ''} />
@@ -126,8 +196,13 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                         </button>
 
                         {/* Central Icon */}
-                        <div className={`w-28 h-28 rounded-full border-4 flex items-center justify-center text-5xl shadow-2xl transition-all duration-500 bg-life-black ${viewColorClass} ${isUnlocked ? 'scale-100' : 'scale-90 opacity-50 grayscale'}`}>
-                            {isUnlocked ? badge.icon : <Lock size={40} />}
+                        <div className={`w-28 h-28 rounded-full border-4 flex items-center justify-center shadow-2xl transition-all duration-500 bg-life-black overflow-hidden ${viewColorClass} ${isUnlocked ? 'scale-100' : 'scale-90'}`}>
+                            <BadgeAnimation 
+                                badgeId={badge.id} 
+                                tier={viewTier} 
+                                icon={badge.icon} 
+                                isUnlocked={isUnlocked} 
+                            />
                         </div>
 
                         {/* Right Arrow */}
@@ -149,7 +224,7 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                 </div>
 
                 {/* 🟢 CONTENT BODY */}
-                <div className="p-6 space-y-6 flex-1 bg-life-paper relative">
+                <div className={`p-6 space-y-6 flex-1 relative z-10 ${bgVideo ? 'bg-transparent' : 'bg-life-paper'}`}>
                     
                     {/* Quote */}
                     <div className="text-center flex flex-col items-center justify-center min-h-[40px]">
@@ -166,7 +241,7 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                         </span>
                         <p className="text-xs text-life-text font-medium leading-relaxed">
                             {badge.description} <br/>
-                            <span className="text-life-gold font-bold bg-life-gold/10 px-2 py-0.5 rounded mt-1 inline-block">
+                            <span className="text-life-gold font-black mt-1 inline-block uppercase tracking-wider">
                                 Target: {activeLevel.target}
                             </span>
                         </p>
@@ -224,7 +299,7 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                 </div>
 
                 {/* Pagination Dots */}
-                <div className="p-4 bg-life-black border-t border-life-muted/10 flex justify-center gap-2">
+                <div className={`p-4 border-t border-life-muted/10 flex justify-center gap-2 relative z-10 ${bgVideo ? 'bg-transparent' : 'bg-life-black'}`}>
                     {badge.levels.map((_, idx) => (
                         <div 
                             key={idx} 
@@ -232,8 +307,7 @@ const BadgeModal: React.FC<BadgeModalProps> = ({ data, onClose }) => {
                         />
                     ))}
                 </div>
-
-            </div>
+            </motion.div>
         </div>
     );
 };

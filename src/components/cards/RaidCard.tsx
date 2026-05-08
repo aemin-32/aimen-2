@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, AlertTriangle, Check, ChevronDown, ChevronUp, Brain, Dumbbell, Activity, Heart, Zap, BookOpen, Calendar, FileText, Maximize2, Target, Palette, Copy, CheckSquare, Square, Coins, Users, Flame } from 'lucide-react';
 import { Raid, RaidStep } from '../../types/raidTypes';
 import { Stat } from '../../types/types';
 import { DIFFICULTY_COLORS, STAT_COLORS } from '../../types/constants';
 import { useSkills } from '../../contexts/SkillContext';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 
 interface RaidCardProps {
   raid: Raid;
@@ -27,7 +28,7 @@ const StatIcon = ({ stat, size = 14 }: { stat: Stat; size?: number }) => {
 };
 
 const RaidCard: React.FC<RaidCardProps> = ({ raid, onToggleStep }) => {
-  const { dispatch } = useLifeOS();
+  const { dispatch } = useAscension();
   const [isExpanded, setIsExpanded] = useState(false);
   const { skillState } = useSkills();
   
@@ -102,7 +103,24 @@ const RaidCard: React.FC<RaidCardProps> = ({ raid, onToggleStep }) => {
   };
 
   return (
-    <div className={`mb-4 bg-life-paper border rounded-xl overflow-hidden shadow-lg relative transition-all ${isUnderLeveled ? 'border-orange-500/30' : 'border-zinc-800'}`}>
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ scale: 1.005 }}
+      className={`mb-4 rounded-xl overflow-hidden relative transition-all cursor-pointer`}
+      style={{
+        border: `1.5px solid ${statColor}`,
+        boxShadow: `0 0 8px ${statColor}99`,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      }}
+    >
+      {/* 🟢 1px White Core (Top edge glow) */}
+      <div 
+          className="absolute top-0 left-0 right-0 h-[1px] opacity-40 z-20"
+          style={{ background: `linear-gradient(90deg, transparent, white, transparent)` }}
+      />
       
       {/* 🟢 RAID HEADER */}
       <div 
@@ -111,9 +129,11 @@ const RaidCard: React.FC<RaidCardProps> = ({ raid, onToggleStep }) => {
       >
         {/* Progress Bar */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-life-muted/20">
-             <div 
+             <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${raid.progress}%` }}
                 className="h-full transition-all duration-700 ease-out"
-                style={{ width: `${raid.progress}%`, backgroundColor: statColor }} 
+                style={{ backgroundColor: statColor }} 
              />
         </div>
 
@@ -320,7 +340,7 @@ const RaidCard: React.FC<RaidCardProps> = ({ raid, onToggleStep }) => {
             </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

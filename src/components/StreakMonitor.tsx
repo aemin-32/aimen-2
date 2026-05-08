@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Shield, Flame, CheckCircle, XCircle, AlertTriangle, ArrowRight, Zap } from 'lucide-react';
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { DailyMode } from '../types/types';
 import { DAILY_TARGETS } from '../types/constants';
 const StreakMonitor: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { user } = state;
 
     // 1. CIRCLE CONFIGURATION
@@ -100,7 +100,7 @@ const StreakMonitor: React.FC = () => {
                     {/* Center Stats */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <div className={`text-5xl font-black drop-shadow-md flex items-center gap-1 ${isSafe ? 'text-life-easy' : 'text-life-gold'}`}>
-                            {user.streak} <Flame size={32} className={`animate-pulse ${isSafe ? 'fill-life-easy' : 'fill-life-gold'}`} />
+                            {isSafe ? user.streak + 1 : user.streak} <Flame size={32} className={`animate-pulse ${isSafe ? 'fill-life-easy' : 'fill-life-gold'}`} />
                         </div>
                         <div className="text-[10px] font-bold text-life-muted uppercase tracking-widest mt-1">
                             Day Streak
@@ -117,37 +117,51 @@ const StreakMonitor: React.FC = () => {
 
                 {/* 🔴 2. WEEKLY SHIELD LOG */}
                 <div className="w-full mb-6">
-                    <div className="flex justify-between items-center mb-3 px-2">
-                        <span className="text-[9px] text-life-muted uppercase font-bold tracking-widest">
+                    <div className="flex justify-between items-center mb-4 px-2">
+                        <span className="text-[10px] sm:text-xs text-life-muted uppercase font-bold tracking-widest">
                             Weekly Survival
                         </span>
                         {/* 🛡️ SHIELD DISPLAY (FIXED) */}
                         <div className="flex items-center gap-2">
-                            <Shield size={10} className="text-life-diamond" />
-                            <span className="text-[9px] text-life-diamond font-bold font-mono">
-                                {user.shields} Stock
-                            </span>
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-life-easy/10 border border-life-easy/20">
+                                <Shield size={12} className="text-life-easy fill-life-easy/20" />
+                                <span className="text-[10px] text-life-easy font-bold font-mono">
+                                    {user.shields.easy} <span className="text-life-easy/50 text-[8px] uppercase">EASY</span>
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-life-normal/10 border border-life-normal/20">
+                                <Shield size={12} className="text-life-normal fill-life-normal/20" />
+                                <span className="text-[10px] text-life-normal font-bold font-mono">
+                                    {user.shields.normal} <span className="text-life-normal/50 text-[8px] uppercase">NORM</span>
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-life-hard/10 border border-life-hard/20">
+                                <Shield size={12} className="text-life-hard fill-life-hard/20" />
+                                <span className="text-[10px] text-life-hard font-bold font-mono">
+                                    {user.shields.hard} <span className="text-life-hard/50 text-[8px] uppercase">HARD</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between bg-life-paper/30 p-2 rounded-xl border border-life-muted/10">
+                    <div className="flex justify-between bg-life-paper/30 p-3 sm:p-4 rounded-xl border border-life-muted/10">
                         {weekDays.map((day, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-2 flex-1">
+                            <div key={idx} className="flex flex-col items-center gap-2.5 flex-1">
                                 <div className={`
-                                    w-8 h-8 rounded-lg flex items-center justify-center border transition-all
+                                    w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all
                                     ${day.outcome === 'success' ? 'bg-life-gold/10 border-life-gold text-life-gold' :
                                       day.outcome === 'shield' ? 'bg-life-diamond/10 border-life-diamond text-life-diamond' :
                                       day.outcome === 'fail' ? 'bg-life-hard/10 border-life-hard text-life-hard' :
                                       day.outcome === 'pending' ? 'bg-life-black border-life-muted/30 text-life-muted animate-pulse' :
                                       'bg-transparent border-transparent text-life-muted/20'}
                                 `}>
-                                    {day.outcome === 'success' && <CheckCircle size={14} />}
-                                    {day.outcome === 'shield' && <Shield size={14} />}
-                                    {day.outcome === 'fail' && <XCircle size={14} />}
-                                    {day.outcome === 'pending' && <div className="w-1.5 h-1.5 bg-life-gold rounded-full" />}
-                                    {day.outcome === 'future' && <div className="w-1 h-1 bg-life-muted/20 rounded-full" />}
+                                    {day.outcome === 'success' && <CheckCircle size={16} />}
+                                    {day.outcome === 'shield' && <Shield size={16} />}
+                                    {day.outcome === 'fail' && <XCircle size={16} />}
+                                    {day.outcome === 'pending' && <div className="w-2 h-2 bg-life-gold rounded-full" />}
+                                    {day.outcome === 'future' && <div className="w-1.5 h-1.5 bg-life-muted/20 rounded-full" />}
                                 </div>
-                                <span className={`text-[8px] font-bold uppercase ${day.outcome === 'future' ? 'text-life-muted/30' : 'text-life-muted'}`}>
+                                <span className={`text-[9px] sm:text-[10px] font-bold uppercase ${day.outcome === 'future' ? 'text-life-muted/30' : 'text-life-muted'}`}>
                                     {day.label}
                                 </span>
                             </div>
@@ -156,13 +170,13 @@ const StreakMonitor: React.FC = () => {
                 </div>
 
                 {/* 🔴 3. NEXT CYCLE PROTOCOL (Planning Tomorrow) */}
-                <div className="w-full pt-4 border-t border-life-muted/10">
-                    <div className="flex items-center gap-2 mb-3 text-life-muted/80">
-                        <Zap size={12} />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Next Cycle Protocol (Tomorrow)</span>
+                <div className="w-full pt-5 border-t border-life-muted/10">
+                    <div className="flex items-center gap-2 mb-4 text-life-muted/80">
+                        <Zap size={14} />
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest">Next Cycle Protocol (Tomorrow)</span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-3 sm:gap-4">
                         {Object.values(DailyMode).map((mode) => {
                             const isSelected = user.pendingMode === mode;
                             let colorClass = '';
@@ -179,17 +193,17 @@ const StreakMonitor: React.FC = () => {
                                     key={mode}
                                     onClick={() => handleSetMode(mode)}
                                     className={`
-                                        relative flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-300
+                                        relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300
                                         ${isSelected 
-                                            ? `bg-opacity-10 ${colorClass} bg-current shadow-[0_0_10px_currentColor] scale-105` 
+                                            ? `bg-opacity-10 ${colorClass} bg-current shadow-[0_0_15px_currentColor] scale-105` 
                                             : 'bg-life-black border-life-muted/20 text-life-muted hover:border-life-muted/50'}
                                     `}
                                 >
-                                    <span className="text-[9px] font-black uppercase tracking-wider mb-1">{label}</span>
-                                    <span className="text-xs font-mono font-bold">{xp} XP</span>
-                                    {isSelected && <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${colorClass.split(' ')[0].replace('text-', 'bg-')}`} />}
+                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider mb-1.5">{label}</span>
+                                    <span className="text-sm sm:text-base font-mono font-bold">{xp} XP</span>
+                                    {isSelected && <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full ${colorClass.split(' ')[0].replace('text-', 'bg-')}`} />}
                                     
-                                    <div className="mt-1 text-[8px] opacity-60 font-mono">
+                                    <div className="mt-1.5 text-[10px] sm:text-xs opacity-80 font-mono">
                                         +{salary} G
                                     </div>
                                 </button>

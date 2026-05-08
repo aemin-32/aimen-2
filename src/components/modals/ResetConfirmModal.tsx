@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
+import { toRoman } from '../../utils/roman-helpers';
 import { AlertTriangle, Skull, Check, X, ShieldCheck, RefreshCw, Trash2 } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 const ResetConfirmModal: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [confirmText, setConfirmText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -79,7 +80,7 @@ const ResetConfirmModal: React.FC = () => {
                                 <li className="text-[10px] text-green-300/80 flex items-center gap-2"><Check size={10} /> Earned Badges</li>
                                 <li className="text-[10px] text-green-300/80 flex items-center gap-2"><Check size={10} /> Store Items</li>
                                 <li className="text-[10px] text-green-300/80 flex items-center gap-2"><Check size={10} /> Unlocked Themes</li>
-                                <li className="text-[10px] text-green-300/80 flex items-center gap-2"><Check size={10} /> Skill Trees (Lvl 1)</li>
+                                <li className="text-[10px] text-green-300/80 flex items-center gap-2"><Check size={10} /> Skill Trees ({toRoman(1)})</li>
                             </ul>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLifeOS } from '../../../../contexts/LifeOSContext';
+import { useAscension } from '../../../../contexts/AscensionContext';
 import { Clock, Volume2, Calendar, FileText, Bell, Zap, Code, Eye } from 'lucide-react';
 
 const renderToggle = (label: string, icon: React.ReactNode, prefKey: any, dispatch: any, state: any) => {
@@ -21,7 +21,7 @@ const renderToggle = (label: string, icon: React.ReactNode, prefKey: any, dispat
 };
 
 export const SystemTab: React.FC = () => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-right-2">

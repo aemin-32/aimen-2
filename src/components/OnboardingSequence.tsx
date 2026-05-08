@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
+import { toRoman } from '../utils/roman-helpers';
 import { Activity, ChevronRight, Terminal } from 'lucide-react';
-import { useLifeOS } from '../contexts/LifeOSContext';
+import { useAscension } from '../contexts/AscensionContext';
 import { Stat } from '../types/types';
 import { playSound } from '../utils/audio';
 
 const OnboardingSequence: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [step, setStep] = useState(0);
     const [name, setName] = useState('');
     const [isExiting, setIsExiting] = useState(false);
@@ -90,7 +91,7 @@ const OnboardingSequence: React.FC = () => {
                             <div className="absolute inset-0 border border-life-gold rounded-full animate-[spin_10s_linear_infinite] opacity-30 border-t-transparent border-l-transparent" />
                         </div>
                         <p className="text-center text-life-muted text-xs mb-12 max-w-xs mx-auto leading-relaxed">
-                            Welcome to LifeOS. This interface will augment your daily operations, turning chaos into order and effort into progression.
+                            Welcome to Ascension. This interface will augment your daily operations, turning chaos into order and effort into progression.
                         </p>
                         <button onClick={handleNext} disabled={isTyping} className="w-full py-4 bg-life-gold hover:bg-yellow-400 text-black font-black uppercase tracking-[0.2em] rounded-sm transition-all hover:scale-[1.02]">
                             Start
@@ -126,13 +127,13 @@ const OnboardingSequence: React.FC = () => {
                             <h2 className="text-2xl font-black text-white uppercase mb-1">{name}</h2>
                             <p className="text-life-gold font-mono text-sm uppercase tracking-widest">READY</p>
                             <div className="mt-4 pt-4 border-t border-life-gold/20 flex justify-center gap-4 text-[10px] text-life-muted uppercase font-bold">
-                                <span>Lvl 1</span>
+                                <span>{toRoman(1)}</span>
                                 <span>Status: ONLINE</span>
                             </div>
                         </div>
                         
                         <button onClick={handleComplete} className="w-full py-4 bg-life-gold hover:bg-yellow-400 text-black font-black uppercase tracking-[0.2em] rounded-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
-                            Enter LifeOS <ChevronRight size={18} />
+                            Enter Ascension <ChevronRight size={18} />
                         </button>
                     </div>
                 )}

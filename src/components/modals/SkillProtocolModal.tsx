@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Terminal, Brain, ScrollText } from 'lucide-react';
-import { useLifeOS } from '../../contexts/LifeOSContext';
+import { useAscension } from '../../contexts/AscensionContext';
 
 const SkillProtocolModal: React.FC = () => {
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
     const [copied, setCopied] = useState(false);
 
     const PROMPT_TEXT = `ROLE: You are the Skill Tree Architect.

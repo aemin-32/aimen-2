@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Landmark, FileText, Plus, Minus, Clock, ShieldAlert, Moon } from 'lucide-react';
-import { useLifeOS } from '../../../contexts/LifeOSContext';
+import { useAscension } from '../../../contexts/AscensionContext';
 import { PurchaseLog } from '../../../types/shopTypes';
 
 interface ConsoleActionTabProps {
@@ -13,7 +13,7 @@ interface ConsoleActionTabProps {
 export const ConsoleActionTab: React.FC<ConsoleActionTabProps> = ({ 
     dateOverride, setDateOverride, handleDateChange 
 }) => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const [transAmount, setTransAmount] = useState<string>('');
     const [transReason, setTransReason] = useState<string>('');
 
