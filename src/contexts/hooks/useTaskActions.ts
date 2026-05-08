@@ -1,21 +1,25 @@
 
 import { Task, TaskCategory, Law } from '../../types/taskTypes';
 import { Difficulty, Stat, LootPayload } from '../../types/types';
-import { useLifeOS } from '../LifeOSContext';
+import { useAscension } from '../AscensionContext';
 import { useSkills } from '../SkillContext';
+import { useHabits } from '../HabitContext';
+import { useRaids } from '../RaidContext';
 import { playSound } from '../../utils/audio';
 import { calculateTaskReward } from '../../utils/economyEngine';
-import { calculateMonthlyAverage, calculateDailyHonorPenalty } from '../../utils/honorSystem';
 import { parseTimeCode, parseCalendarCode, calculateCampaignDate, getActiveCampaignData } from '../../utils/campaignEngine';
 import { PENALTIES } from '../../types/constants';
+import { dispatchDataBurst } from '../../components/effects/DataBurst';
 
 export const useTaskActions = (
     state: { tasks: Task[], categories: TaskCategory[], laws: Law[] },
     setState: React.Dispatch<React.SetStateAction<{ tasks: Task[], categories: TaskCategory[], laws: Law[] }>>,
     soundEnabled: boolean
 ) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills();
+    const { habitState } = useHabits();
+    const { raidState } = useRaids();
 
     const addTask = (taskData: Omit<Task, 'id' | 'isCompleted'>) => {
         let { cleanedTitle, timeCode } = parseTimeCode(taskData.title);
@@ -75,7 +79,16 @@ export const useTaskActions = (
 
         if (isCompleting) {
             let rewards = calculateTaskReward(task.difficulty, lifeState.user.currentMode);
-            if (task.isCampaign) rewards.xp = Math.ceil(rewards.xp * 1.1);
+            
+            // 🏎️ SYSTEM ASCENDING MULTIPLIER
+            if (lifeState.ui.systemAscending.isActive) {
+                rewards.xp *= 2;
+            }
+
+            const bonusMult = 1 + (lifeState.user.campaignBonus || 0);
+            rewards.xp = Math.ceil(rewards.xp * bonusMult);
+
+            if (task.isCampaign) rewards.xp = Math.ceil(rewards.xp * 1.2);
 
             const roll = Math.random();
             const isCrit = (task.difficulty === Difficulty.HARD && roll > 0.85) || 
@@ -120,9 +133,11 @@ export const useTaskActions = (
                 newStats[stat] = (newStats[stat] || 0) + rewardPerStat;
             });
 
+            const xpGain = rewards.xp;
+
             lifeDispatch.updateUser({
-                currentXP: lifeState.user.currentXP + rewards.xp,
-                dailyXP: lifeState.user.dailyXP + rewards.xp,
+                currentXP: lifeState.user.currentXP + xpGain,
+                dailyXP: lifeState.user.dailyXP + xpGain,
                 gold: lifeState.user.gold + rewards.gold,
                 stats: newStats,
                 metrics: newMetrics 
@@ -133,15 +148,24 @@ export const useTaskActions = (
                 skillDispatch.addSkillXP(task.skillId, skillXp);
             }
 
+            // 🚀 PARTICLE EXPLOSION
+            dispatchDataBurst();
+
             if (lootPayload) {
                 setTimeout(() => lifeDispatch.setModal('loot', lootPayload), 200); 
             } else {
                 lifeDispatch.addToast(`Mission Complete: ${task.title}`, 'success');
             }
 
+            lifeDispatch.registerCompletion(task.difficulty);
+
         } else {
             const baseRewards = calculateTaskReward(task.difficulty, lifeState.user.currentMode);
-            if (task.isCampaign) baseRewards.xp = Math.ceil(baseRewards.xp * 1.1);
+            
+            const bonusMult = 1 + (lifeState.user.campaignBonus || 0);
+            baseRewards.xp = Math.ceil(baseRewards.xp * bonusMult);
+
+            if (task.isCampaign) baseRewards.xp = Math.ceil(baseRewards.xp * 1.2);
 
             const currentMetrics = lifeState.user.metrics;
             const newMetrics = {
@@ -170,7 +194,18 @@ export const useTaskActions = (
         }
 
         if (soundToPlay && soundEnabled) playSound(soundToPlay, soundEnabled);
-        setState(prev => ({ ...prev, tasks: prev.tasks.map(t => t.id === taskId ? { ...t, isCompleted: isCompleting } : t) }));
+        setState(prev => ({ 
+            ...prev, 
+            tasks: prev.tasks.map(t => 
+                t.id === taskId 
+                    ? { 
+                        ...t, 
+                        isCompleted: isCompleting, 
+                        completedAt: isCompleting ? new Date().toISOString() : undefined 
+                    } 
+                    : t
+            ) 
+        }));
     };
 
     const toggleSubtask = (taskId: string, subtaskId: string) => {
@@ -190,24 +225,16 @@ export const useTaskActions = (
 
         if (!task.isCompleted && !task.isArchived) {
              const penalty = PENALTIES[task.difficulty];
-             const penaltyPercent = calculateDailyHonorPenalty(task.difficulty);
-             const todayIso = lifeState.ui.debugDate ? new Date(lifeState.ui.debugDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-             const currentDailyHonor = lifeState.user.honorDailyLog[todayIso] !== undefined ? lifeState.user.honorDailyLog[todayIso] : 100;
-             const newDailyHonor = Math.max(0, currentDailyHonor - penaltyPercent); 
-             const updatedLog = { ...lifeState.user.honorDailyLog, [todayIso]: newDailyHonor };
-             const newAverage = calculateMonthlyAverage(updatedLog, lifeState.ui.debugDate);
-
+             
              lifeDispatch.updateUser({
                 currentXP: Math.max(0, lifeState.user.currentXP - penalty.xp),
                 gold: Math.max(0, lifeState.user.gold - penalty.gold),
                 stats: {
                     ...lifeState.user.stats,
                     [task.stat]: Math.max(0, lifeState.user.stats[task.stat] - penalty.stat)
-                },
-                honorDailyLog: updatedLog,
-                honor: newAverage
+                }
             });
-            lifeDispatch.addToast(`Mission Failed: -${penaltyPercent}% Honor`, 'error');
+            lifeDispatch.addToast(`Mission Failed: Penalties Applied`, 'error');
             playSound('error', soundEnabled);
         } else {
             playSound('delete', soundEnabled);
@@ -260,11 +287,11 @@ export const useTaskActions = (
         playSound('click', soundEnabled);
     };
 
-    const addLaw = (title: string, type: 'gold' | 'xp' | 'stat' | 'honor', value: number, stat?: Stat) => {
+    const addLaw = (title: string, type: 'gold' | 'xp' | 'stat', value: number, stat?: Stat) => {
         const newLaw: Law = {
             id: `law_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             title,
-            penaltyType: type,
+            penaltyType: (type as any),
             penaltyValue: value,
             statTarget: stat,
             timesBroken: 0
@@ -299,16 +326,10 @@ export const useTaskActions = (
                     [law.statTarget]: lifeState.user.stats[law.statTarget] - law.penaltyValue
                 }
             });
-        } else if (law.penaltyType === 'honor') {
-            const todayIso = lifeState.ui.debugDate ? new Date(lifeState.ui.debugDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            const currentDailyHonor = lifeState.user.honorDailyLog[todayIso] !== undefined ? lifeState.user.honorDailyLog[todayIso] : 100;
-            const newDailyHonor = Math.max(0, currentDailyHonor - law.penaltyValue);
-            const updatedLog = { ...lifeState.user.honorDailyLog, [todayIso]: newDailyHonor };
-            const newAverage = calculateMonthlyAverage(updatedLog, lifeState.ui.debugDate);
-            lifeDispatch.updateUser({ honorDailyLog: updatedLog, honor: newAverage });
         }
 
         setState(prev => ({ ...prev, laws: prev.laws.map(l => l.id === id ? { ...l, timesBroken: l.timesBroken + 1 } : l) }));
+        lifeDispatch.updateUser({ metrics: { ...lifeState.user.metrics, lawsBroken: lifeState.user.metrics.lawsBroken + 1 } });
         playSound('error', soundEnabled);
         lifeDispatch.addToast(`Law Broken: ${law.title}`, 'error');
     };

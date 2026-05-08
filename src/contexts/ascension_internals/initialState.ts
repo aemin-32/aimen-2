@@ -1,0 +1,117 @@
+
+import { AscensionState, Difficulty, Stat, DailyMode } from '../../types/types';
+import { DAILY_TARGETS } from '../../types/constants';
+import { DEFAULT_THEMES } from '../../data/themeData';
+
+export const INITIAL_STATE: AscensionState = {
+  user: {
+    name: "Shadow Walker",
+    title: "Initiate",
+    level: 1,
+    currentXP: 0, 
+    targetXP: 1000,
+    gold: 450,
+    streak: 0, 
+    shields: {
+      easy: 1,
+      normal: 1,
+      hard: 1
+    },
+    inventory: [],
+    equippedItems: [], 
+    equippedAvatarParts: {}, // 👈 NEW: Slot ID -> Item ID
+    
+    avatarId: 'default', // 👈 NEW: Default Avatar
+    unlockedAvatars: ['default'], // 👈 NEW: Start with default
+    
+    hasOnboarded: false, 
+
+    purchaseHistory: [], 
+    badges: [], 
+    badgeTiers: {}, 
+    badgeHistory: {}, 
+    featuredBadges: [],
+    
+    profileCosmetics: {}, // 👈 NEW: Visual customizations
+
+    // 🆕 HEARTBEAT INIT
+    dailyXP: 0,
+    dailyTarget: DAILY_TARGETS[DailyMode.NORMAL], 
+    currentMode: DailyMode.NORMAL,
+    pendingMode: DailyMode.NORMAL, 
+    lastProcessedDate: new Date().toISOString(), 
+    consecutiveShields: 0,
+    campaignBonus: 0,
+    streakHistory: {}, 
+    restDays: [], 
+
+    metrics: { 
+        totalTasksCompleted: 0,
+        tasksByDifficulty: { [Difficulty.EASY]: 0, [Difficulty.NORMAL]: 0, [Difficulty.HARD]: 0 },
+        totalRaidsWon: 0,
+        raidsByDifficulty: { [Difficulty.EASY]: 0, [Difficulty.NORMAL]: 0, [Difficulty.HARD]: 0 },
+        totalGoldEarned: 450, 
+        totalXPEarned: 0, 
+        highestStreak: 0,
+        habitsFixed: 0,
+        habitsByDifficulty: { [Difficulty.EASY]: 0, [Difficulty.NORMAL]: 0, [Difficulty.HARD]: 0 }, // 👈 NEW
+        shieldsUsed: 0,
+        resetsCount: 0,
+        lawsBroken: 0, // 👈 NEW
+        campaignsCompleted: 0 // 👈 NEW
+    },
+    // 🎨 Use Imported Themes
+    unlockedThemes: DEFAULT_THEMES,
+    stats: {
+      [Stat.STR]: 1,
+      [Stat.INT]: 1,
+      [Stat.DIS]: 1,
+      [Stat.HEA]: 1,
+      [Stat.CRT]: 1,
+      [Stat.SPR]: 1,
+      [Stat.REL]: 1,
+      [Stat.FIN]: 1,
+    },
+    lastOnline: new Date().toISOString(), 
+    preferences: {
+        soundEnabled: true,
+        deviceNotificationsEnabled: false, 
+        theme: 'standard',
+        showHighlights: true, 
+        showCampaignUI: true,
+        unlockAllWeeks: false,
+        showCalendarSync: true, 
+        statsViewMode: 'radar',
+        enableRefiner: true, 
+        copyIncludesHistory: true, // 👈 NEW: Default Copy Everything
+        dayStartHour: 4, // 👈 NEW: Default Day Starts at 04:00 AM
+        // 🔑 API KEY INIT (The Neural Cortex)
+        apiKeys: {
+            discussion: '',
+            tasks: '',
+            habits: '',
+            raids: '',
+            themes: '',
+            monitoring: '',
+            refiner: '' 
+        }
+    }
+  },
+  badgesRegistry: [],
+  ui: {
+    currentView: 'tasks',
+    activeModal: 'none',
+    modalQueue: [], 
+    toasts: [],
+    systemLogs: [], 
+    debugDate: null,
+    focusSession: null,
+    habitsViewMode: 'list',
+    tasksViewMode: 'missions',
+    systemAscending: {
+      isActive: false,
+      activationTime: null,
+      recentCompletions: []
+    }
+  }
+};

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { LifeOSState } from '../../types/types';
-import { calculateMidnightUpdates } from '../lifeos_internals/midnightStrategy';
+import { AscensionState } from '../../types/types';
+import { calculateMidnightUpdates } from '../ascension_internals/midnightStrategy';
 
-export const useDailyReset = (state: LifeOSState, setState: React.Dispatch<React.SetStateAction<LifeOSState>>) => {
+export const useDailyReset = (state: AscensionState, setState: React.Dispatch<React.SetStateAction<AscensionState>>) => {
     useEffect(() => {
         const checkDailyReset = () => {
             const now = state.ui.debugDate ? new Date(state.ui.debugDate) : new Date();

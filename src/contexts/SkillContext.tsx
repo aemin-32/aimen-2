@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Skill, SkillRank } from '../types/skillTypes';
 import { Stat } from '../types/types';
 import { calculateNextLevelXP, getSkillRank, checkIsRusty } from '../utils/skillEngine';
-import { useLifeOS } from './LifeOSContext';
+import { useAscension } from './AscensionContext';
 import { playSound } from '../utils/audio';
 import { usePersistence } from '../hooks/usePersistence';
 
@@ -24,7 +24,7 @@ interface SkillContextType {
     };
 }
 
-const STORAGE_KEY_SKILLS = 'LIFE_OS_SKILLS_DATA';
+const STORAGE_KEY_SKILLS = 'ASCENSION_SKILLS_DATA';
 
 const INITIAL_SKILLS: Skill[] = [
     {
@@ -42,8 +42,8 @@ const INITIAL_SKILLS: Skill[] = [
     },
     {
         id: 'sk_02',
-        title: 'كارزمه',
-        description: 'دمج بين المهارات الاجتماعية، الذكاء، والصحة.',
+        title: 'Charisma',
+        description: 'A blend of social skills, intelligence, and health.',
         relatedStats: [Stat.REL, Stat.INT, Stat.HEA],
         level: 1,
         currentXP: 0,
@@ -76,12 +76,12 @@ const migrateSkillState = (data: any): { skills: Skill[] } => {
 };
 
 export const SkillProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const soundEnabled = lifeState.user.preferences.soundEnabled;
 
     // 🟢 USE PERSISTENCE HOOK
     const [state, setState] = usePersistence<{ skills: Skill[] }>(
-        'LIFE_OS_SKILLS_DATA',
+        'ASCENSION_SKILLS_DATA',
         { skills: INITIAL_SKILLS },
         'skills_data',
         migrateSkillState

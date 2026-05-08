@@ -3,13 +3,11 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 // --- تصحيح المسارات (الرجوع خطوة واحدة ../ للوصول للمجلدات المجاورة) ---
 import { Habit, DailyStatus, HabitCategory } from '../types/habitTypes';
 import { Difficulty, Stat, Toast, Reminder } from '../types/types';
-import { useLifeOS } from './LifeOSContext'; // ملف مجاور (نفس المجلد)
+import { useAscension } from './AscensionContext'; // ملف مجاور (نفس المجلد)
 import { useSkills } from './SkillContext';   // ملف مجاور (نفس المجلد)
 import { checkHabitActive, calculateFall } from '../utils/habitEngine'; // في مجلد utils
 import { playSound } from '../utils/audio';
 import { calculateTaskReward } from '../utils/economyEngine';
-// 🟢 Updated Import
-import { calculateMonthlyAverage, calculateDailyHonorPenalty } from '../utils/honorSystem'; 
 import { usePersistence } from '../hooks/usePersistence';
 import { useHabitActions } from './hooks/useHabitActions';
 
@@ -38,8 +36,8 @@ interface HabitContextType {
     };
 }
 
-const STORAGE_KEY_HABITS = 'LIFE_OS_HABITS_DATA';
-const STORAGE_KEY_CATEGORIES = 'LIFE_OS_HABIT_CATEGORIES';
+const STORAGE_KEY_HABITS = 'ASCENSION_HABITS_DATA';
+const STORAGE_KEY_CATEGORIES = 'ASCENSION_HABIT_CATEGORIES';
 
 // 🧹 CLEARED MOCK DATA (Empty Array for Clean Slate)
 const INITIAL_HABITS: Habit[] = [
@@ -113,13 +111,13 @@ const migrateHabitState = (data: any): { habits: Habit[], categories: HabitCateg
 };
 
 export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills(); 
     const soundEnabled = lifeState.user.preferences.soundEnabled;
 
     // 🟢 USE PERSISTENCE HOOK
     const [state, setState] = usePersistence<{ habits: Habit[], categories: HabitCategory[], lastHabitResetDate: string }>(
-        'LIFE_OS_HABITS_COMBINED',
+        'ASCENSION_HABITS_COMBINED',
         { habits: INITIAL_HABITS, categories: INITIAL_CATEGORIES, lastHabitResetDate: new Date().toISOString() },
         'habits_data',
         migrateHabitState
@@ -154,8 +152,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 yesterday.setDate(yesterday.getDate() - 1);
                 const yesterdayIso = yesterday.toISOString();
                 
-                let remainingShields = lifeState.user.shields; 
-                let shieldsConsumed = 0;
+                let remainingShields = { ...lifeState.user.shields }; 
+                let shieldsConsumed = { easy: 0, normal: 0, hard: 0 };
                 let statPenalties: Partial<Record<Stat, number>> = {};
                 let disPenaltyTotal = 0;
                 let partialRestCount = 0;
@@ -189,10 +187,13 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                             return { ...habit, ...baseReset, status: 'pending' as DailyStatus, shieldUsed: false };
                         }
 
-                        if (remainingShields > 0) {
-                            remainingShields--;
-                            shieldsConsumed++;
-                            lifeDispatch.addToast(`🛡️ Shield protected: ${habit.title}`, 'info');
+                        const diff = habit.difficulty || Difficulty.NORMAL;
+                        const shieldKey = diff === Difficulty.HARD ? 'hard' : diff === Difficulty.EASY ? 'easy' : 'normal';
+
+                        if (remainingShields[shieldKey] > 0) {
+                            remainingShields[shieldKey]--;
+                            shieldsConsumed[shieldKey]++;
+                            lifeDispatch.addToast(`🛡️ ${shieldKey.toUpperCase()} Shield protected: ${habit.title}`, 'info');
                             return { ...habit, ...baseReset, status: 'pending' as DailyStatus, shieldUsed: true };
                         }
 
@@ -210,7 +211,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 // Apply Updates & Side Effects
                 setState(prev => ({ ...prev, habits: updatedHabits, lastHabitResetDate: now.toISOString() }));
 
-                if (shieldsConsumed > 0) {
+                const totalShieldsConsumed = shieldsConsumed.easy + shieldsConsumed.normal + shieldsConsumed.hard;
+                if (totalShieldsConsumed > 0) {
                     lifeDispatch.updateUser({ shields: remainingShields });
                     playSound('success', soundEnabled);
                 } 

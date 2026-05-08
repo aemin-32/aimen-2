@@ -1,12 +1,12 @@
 import React from 'react';
-import { LifeOSState, UserProfile, ViewState, ModalType, Toast, Theme, Stat } from '../../types/types';
+import { AscensionState, UserProfile, ViewState, ModalType, Toast, Theme, Stat } from '../../types/types';
 import { StoreItem } from '../../types/shopTypes';
 import { BadgeDefinition } from '../../types/badgeTypes';
 import { playSound } from '../../utils/audio';
 import { requestNotificationPermission } from '../../utils/notifications';
-import { calculateMidnightUpdates } from '../lifeos_internals/midnightStrategy';
+import { calculateMidnightUpdates } from '../ascension_internals/midnightStrategy';
 
-export const useDispatch = (state: LifeOSState, setState: React.Dispatch<React.SetStateAction<LifeOSState>>) => {
+export const useDispatch = (state: AscensionState, setState: React.Dispatch<React.SetStateAction<AscensionState>>) => {
     const soundEnabled = state.user.preferences.soundEnabled;
 
     const updateUser = (updates: Partial<UserProfile>) => setState(prev => ({ ...prev, user: { ...prev.user, ...updates } }));
@@ -45,6 +45,62 @@ export const useDispatch = (state: LifeOSState, setState: React.Dispatch<React.S
         updateUser({ preferences: { ...state.user.preferences, dayStartHour: hour } });
         addToast(`Day Start set to ${hour}:00`, 'info');
     };
+
+    const registerCompletion = (difficulty: string) => {
+        const now = new Date();
+        const windowStart = new Date(now.getTime() - 90 * 60 * 1000); // 90-minute window
+        
+        let points = 1; // Default EASY
+        if (difficulty === 'normal') points = 2;
+        if (difficulty === 'hard') points = 4;
+
+        setState(prev => {
+            const recent = [...prev.ui.systemAscending.recentCompletions, { timestamp: now.toISOString(), points }]
+                .filter(item => new Date(item.timestamp) > windowStart);
+            
+            let activationTime = prev.ui.systemAscending.activationTime;
+
+            if (prev.ui.systemAscending.isActive) {
+                activationTime = now.toISOString(); // Reset 15m timer
+            }
+
+            return {
+                ...prev,
+                ui: {
+                    ...prev.ui,
+                    systemAscending: {
+                        ...prev.ui.systemAscending,
+                        recentCompletions: recent,
+                        activationTime
+                    }
+                }
+            };
+        });
+    };
+
+    const triggerAscension = () => {
+        const now = new Date();
+        setState(prev => {
+            const totalPoints = prev.ui.systemAscending.recentCompletions.reduce((sum, item) => sum + item.points, 0);
+            
+            if (totalPoints >= 12 && !prev.ui.systemAscending.isActive) {
+                playSound('crit', soundEnabled);
+                return {
+                    ...prev,
+                    ui: {
+                        ...prev.ui,
+                        systemAscending: {
+                            ...prev.ui.systemAscending,
+                            isActive: true,
+                            activationTime: now.toISOString()
+                        }
+                    }
+                };
+            }
+            return prev;
+        });
+    };
+
     const resetSystem = () => { localStorage.clear(); playSound('delete', soundEnabled); window.location.reload(); };
     const completeOnboarding = (name: string, title: string, focusStat: Stat) => updateUser({ name, title, hasOnboarded: true, stats: { ...state.user.stats, [focusStat]: state.user.stats[focusStat] + 2 } });
     const useItem = (item: StoreItem) => {
@@ -93,6 +149,19 @@ export const useDispatch = (state: LifeOSState, setState: React.Dispatch<React.S
     const setDebugDate = (date: string | null) => setState(prev => ({ ...prev, ui: { ...prev.ui, debugDate: date } }));
     const setCustomAudio = (file: File) => { const url = URL.createObjectURL(file); setState(prev => ({ ...prev, ui: { ...prev.ui, customAudio: { name: file.name, url } } })); addToast(`Audio Loaded: ${file.name}`, 'success'); };
 
+    const toggleEquipAvatarPart = (itemId: string, slot: string) => {
+        const newParts = { ...state.user.equippedAvatarParts };
+        if (newParts[slot] === itemId) {
+            delete newParts[slot];
+            addToast('Avatar Part Unequipped', 'info');
+        } else {
+            newParts[slot] = itemId;
+            addToast('Avatar Part Equipped', 'success');
+        }
+        updateUser({ equippedAvatarParts: newParts });
+        playSound('click', soundEnabled);
+    };
+
     return {
         updateUser,
         setView,
@@ -118,8 +187,11 @@ export const useDispatch = (state: LifeOSState, setState: React.Dispatch<React.S
         endFocusSession,
         completeOnboarding,
         toggleEquip,
+        toggleEquipAvatarPart,
         enableNotifications,
         setCustomAudio,
         setDayStartHour,
+        registerCompletion,
+        triggerAscension,
     };
 };

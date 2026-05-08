@@ -2,14 +2,12 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Task, TaskCategory, Law } from '../types/taskTypes';
 import { Difficulty, Stat, LootPayload, Reminder } from '../types/types';
-import { useLifeOS } from './LifeOSContext'; // نفس المجلد (صحيح)
+import { useAscension } from './AscensionContext'; // نفس المجلد (صحيح)
 import { useSkills } from './SkillContext';   // نفس المجلد (صحيح)
 import { playSound } from '../utils/audio';   // مجلد خارجي
 import { REWARDS, PENALTIES } from '../types/constants'; // مجلد خارجي
 import { parseTimeCode, parseCalendarCode, calculateCampaignDate, getActiveCampaignData } from '../utils/campaignEngine';
 import { calculateTaskReward } from '../utils/economyEngine';
-// 🟢 Updated Import
-import { calculateMonthlyAverage, calculateDailyHonorPenalty } from '../utils/honorSystem'; 
 import { usePersistence } from '../hooks/usePersistence';
 import { useTaskActions } from './hooks/useTaskActions';
 
@@ -35,7 +33,7 @@ interface TaskContextType {
         restoreTask: (taskId: string) => void;
         toggleSubtask: (taskId: string, subtaskId: string) => void;
         // ⚖️ LAW FUNCTIONS
-        addLaw: (title: string, type: 'gold' | 'xp' | 'stat' | 'honor', value: number, stat?: Stat) => void;
+        addLaw: (title: string, type: 'gold' | 'xp' | 'stat', value: number, stat?: Stat) => void;
         updateLaw: (id: string, updates: Partial<Omit<Law, 'id'>>) => void; 
         deleteLaw: (id: string) => void;
         enforceLaw: (id: string) => void;
@@ -44,14 +42,14 @@ interface TaskContextType {
     };
 }
 
-const STORAGE_KEY_TASKS = 'LIFE_OS_TASKS_DATA';
-const STORAGE_KEY_TASK_CATS = 'LIFE_OS_TASK_CATEGORIES';
-const STORAGE_KEY_LAWS = 'LIFE_OS_LAWS_DATA'; 
+const STORAGE_KEY_TASKS = 'ASCENSION_TASKS_DATA';
+const STORAGE_KEY_TASK_CATS = 'ASCENSION_TASK_CATEGORIES';
+const STORAGE_KEY_LAWS = 'ASCENSION_LAWS_DATA'; 
 
 const INITIAL_TASKS: Task[] = [
     {
       id: 't_01',
-      title: 'Initialize LifeOS Protocol',
+      title: 'Initialize Ascension Protocol',
       description: 'System calibration complete.',
       difficulty: Difficulty.HARD,
       stat: Stat.INT,
@@ -100,13 +98,13 @@ const migrateTaskState = (data: any): TaskState => {
 };
 
 export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills();
     const soundEnabled = lifeState.user.preferences.soundEnabled;
 
     // 🟢 USE PERSISTENCE HOOK
     const [state, setState] = usePersistence<TaskState>(
-        'LIFE_OS_TASKS_COMBINED',
+        'ASCENSION_TASKS_COMBINED',
         { tasks: INITIAL_TASKS, categories: INITIAL_CATS, laws: [] },
         'tasks_data',
         migrateTaskState

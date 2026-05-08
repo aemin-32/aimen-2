@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { LifeOSState } from '../../types/types';
+import { AscensionState } from '../../types/types';
 import { playSound } from '../../utils/audio';
 
-export const useLevelUp = (state: LifeOSState, setState: React.Dispatch<React.SetStateAction<LifeOSState>>) => {
+export const useLevelUp = (state: AscensionState, setState: React.Dispatch<React.SetStateAction<AscensionState>>) => {
     useEffect(() => {
         if (state.user.currentXP < state.user.targetXP) return;
 
@@ -21,6 +21,13 @@ export const useLevelUp = (state: LifeOSState, setState: React.Dispatch<React.Se
                 level: newLevel,
                 currentXP: remainingXP,
                 targetXP: newTargetXP,
+                title: (newLevel >= 5 && userCopy.title.toLowerCase() === 'initiate') ? 'Operative' : userCopy.title,
+                gold: userCopy.gold + 100, // 👈 REWARD: 100G
+                shields: {
+                    easy: Math.min(3, userCopy.shields.easy + 1),
+                    normal: Math.min(3, userCopy.shields.normal + 1),
+                    hard: Math.min(3, userCopy.shields.hard + 1)
+                },
             };
         }
 

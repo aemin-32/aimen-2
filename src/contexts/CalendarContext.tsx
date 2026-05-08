@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { initGapiClient, initGisClient, handleAuthClick, handleSignoutClick, findLifeOSCalendar, createLifeOSCalendar, syncEventToCalendar } from '../services/googleCalendarService';
+import { initGapiClient, initGisClient, handleAuthClick, handleSignoutClick, findAscensionCalendar, createAscensionCalendar, syncEventToCalendar } from '../services/googleCalendarService';
 import { useTasks } from './TaskContext';
 import { useHabits } from './HabitContext';
 import { useRaids } from './RaidContext';
-import { useLifeOS } from './LifeOSContext';
+import { useAscension } from './AscensionContext';
 
 interface CalendarContextType {
     isAuthorized: boolean;
@@ -22,7 +22,7 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const { taskState } = useTasks();
     const { habitState } = useHabits();
     const { raidState } = useRaids();
-    const { dispatch } = useLifeOS();
+    const { dispatch } = useAscension();
 
     useEffect(() => {
         const init = async () => {
@@ -62,9 +62,9 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         try {
             // 1. Find or Create Calendar
-            let calId = await findLifeOSCalendar();
+            let calId = await findAscensionCalendar();
             if (!calId) {
-                calId = await createLifeOSCalendar();
+                calId = await createAscensionCalendar();
             }
 
             if (!calId) throw new Error("Could not create/find calendar.");

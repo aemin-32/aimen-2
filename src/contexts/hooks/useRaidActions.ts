@@ -1,18 +1,20 @@
 
 import { Raid, RaidStep } from '../../types/raidTypes';
 import { Difficulty, Stat, LootPayload } from '../../types/types';
-import { useLifeOS } from '../LifeOSContext';
+import { useAscension } from '../AscensionContext';
 import { useSkills } from '../SkillContext';
 import { playSound } from '../../utils/audio';
 import { calculateTaskReward } from '../../utils/economyEngine';
+import { dispatchDataBurst } from '../../components/effects/DataBurst';
 import { parseTimeCode, getActiveCampaignData, calculateCampaignDate } from '../../utils/campaignEngine';
+import { executeRaidDeletion } from '../../utils/raidEngine';
 
 export const useRaidActions = (
     state: { raids: Raid[] },
     setState: React.Dispatch<React.SetStateAction<{ raids: Raid[] }>>,
     soundEnabled: boolean
 ) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills();
 
     const addRaid = (raidData: Omit<Raid, 'id' | 'status' | 'progress'>) => {
@@ -77,9 +79,10 @@ export const useRaidActions = (
     };
 
     const deleteRaid = (raidId: string) => {
-        setState(prev => ({ ...prev, raids: prev.raids.filter(r => r.id !== raidId) }));
-        playSound('delete', soundEnabled);
-        lifeDispatch.addToast('Operation Deleted', 'info');
+        setState(prev => ({ 
+            ...prev, 
+            raids: executeRaidDeletion(prev.raids, raidId, soundEnabled, lifeDispatch.addToast) 
+        }));
     };
 
     const archiveRaid = (raidId: string) => {
@@ -245,12 +248,32 @@ export const useRaidActions = (
         const isRaidComplete = newProgress === 100;
         let lootPayload: LootPayload | null = null;
         if (isCompleting) {
+            dispatchDataBurst();
             lifeDispatch.updateUser({ currentXP: lifeState.user.currentXP + xp, dailyXP: lifeState.user.dailyXP + xp, gold: lifeState.user.gold + gold, stats: newStats });
             if (stepSkillId) skillDispatch.addSkillXP(stepSkillId, Math.ceil(xp * 0.5));
+            
+            // 🏎️ SYSTEM ASCENDING: Raids are always HARD (4 points)
+            lifeDispatch.registerCompletion('hard');
+
             if (isRaidComplete) {
                 playSound('crit', soundEnabled);
                 lootPayload = { title: `Operation Conquered: ${raid.title}`, xp: xp * 5, gold: gold * 5, multiplier: 5, message: "Sector Secured. Tactical Superiority Achieved." };
-                lifeDispatch.updateUser({ currentXP: lifeState.user.currentXP + (xp * 5), gold: lifeState.user.gold + (gold * 5), metrics: { ...lifeState.user.metrics, totalRaidsWon: lifeState.user.metrics.totalRaidsWon + 1 } });
+                
+                const newMetrics = { 
+                    ...lifeState.user.metrics, 
+                    totalRaidsWon: lifeState.user.metrics.totalRaidsWon + 1,
+                    raidsByDifficulty: {
+                        ...lifeState.user.metrics.raidsByDifficulty,
+                        [raid.difficulty]: (lifeState.user.metrics.raidsByDifficulty[raid.difficulty] || 0) + 1
+                    },
+                    campaignsCompleted: raid.isCampaign ? lifeState.user.metrics.campaignsCompleted + 1 : lifeState.user.metrics.campaignsCompleted
+                };
+
+                lifeDispatch.updateUser({ 
+                    currentXP: lifeState.user.currentXP + (xp * 5), 
+                    gold: lifeState.user.gold + (gold * 5), 
+                    metrics: newMetrics 
+                });
             } else {
                 playSound('success', soundEnabled);
                 lifeDispatch.addToast(`Step Secured | +${xp} XP`, 'success');

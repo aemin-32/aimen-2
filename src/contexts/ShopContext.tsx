@@ -1,10 +1,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { StoreItem, PurchaseLog } from '../types/shopTypes';
-import { useLifeOS } from './LifeOSContext';
+import { useAscension } from './AscensionContext';
 import { playSound } from '../utils/audio';
 import { Theme, Stat } from '../types/types';
-import { redeemLowestScore } from '../utils/honorSystem';
 import { usePersistence } from '../hooks/usePersistence';
 
 interface ShopState {
@@ -20,22 +19,190 @@ interface ShopContextType {
         deleteStoreItem: (itemId: string) => void;
         restoreData: (storeItems: StoreItem[]) => void;
     };
+    getItemLimitInfo: (itemId: string) => { current: number; max: number | null };
 }
 
-const STORAGE_KEY_SHOP = 'LIFE_OS_SHOP_DATA';
+const STORAGE_KEY_SHOP = 'ASCENSION_SHOP_DATA';
 
 // INITIAL STOCK logic remains the same...
 const INITIAL_STOCK: StoreItem[] = [
     {
-        id: 'item_shield',
-        title: 'Streak Shield',
-        description: 'Prevents your streak from resetting if you miss a day.',
+        id: 'item_shield_easy',
+        title: 'Easy Shield',
+        description: 'Prevents your EASY streak from resetting if you miss a day.',
+        cost: 250,
+        type: 'system',
+        icon: 'Shield',
+        isInfinite: true
+    },
+    {
+        id: 'item_shield_normal',
+        title: 'Normal Shield',
+        description: 'Prevents your NORMAL streak from resetting if you miss a day.',
+        cost: 500,
+        type: 'system',
+        icon: 'Shield',
+        isInfinite: true
+    },
+    {
+        id: 'item_shield_hard',
+        title: 'Hard Shield',
+        description: 'Prevents your HARD streak from resetting if you miss a day.',
         cost: 1000,
         type: 'system',
         icon: 'Shield',
         isInfinite: true
     },
-    // ... (Other items kept for brevity, will be included in full code logic implicitly if we wanted, but for restoring focus we just use what's loaded)
+    {
+        id: 'item_battery',
+        title: 'System Battery',
+        description: 'Recharges all your shields (Easy, Normal, Hard) to their maximum capacity (3).',
+        cost: 3000,
+        type: 'system',
+        icon: 'Zap',
+        isInfinite: true
+    },
+    {
+        id: 'avatar_ninja',
+        title: 'Ninja Avatar',
+        description: 'A stealthy warrior for your profile.',
+        cost: 500,
+        type: 'avatar',
+        icon: 'UserRound',
+        isInfinite: false
+    },
+    {
+        id: 'avatar_wizard',
+        title: 'Wizard Avatar',
+        description: 'A master of the arcane arts.',
+        cost: 500,
+        type: 'avatar',
+        icon: 'Sparkles',
+        isInfinite: false
+    },
+    {
+        id: 'avatar_cyborg',
+        title: 'Cyborg Avatar',
+        description: 'Half human, half machine.',
+        cost: 1000,
+        type: 'avatar',
+        icon: 'Cpu',
+        isInfinite: false
+    },
+    {
+        id: 'avatar_zeus',
+        title: 'Zeus Avatar',
+        description: 'The King of Gods. Radiant and powerful.',
+        cost: 10000,
+        type: 'avatar',
+        icon: 'Zap',
+        isInfinite: false
+    },
+    {
+        id: 'artifact_midas_gauntlet',
+        title: 'Midas Gauntlet',
+        description: 'Passive: +20% Gold from all sources.',
+        cost: 2500,
+        type: 'artifact',
+        icon: 'Hand',
+        isInfinite: false,
+        effect: { type: 'gold_boost', value: 0.2 }
+    },
+    {
+        id: 'artifact_scholar_scroll',
+        title: 'Scholar Scroll',
+        description: 'Passive: +15% Intelligence XP.',
+        cost: 1500,
+        type: 'artifact',
+        icon: 'Scroll',
+        isInfinite: false,
+        effect: { type: 'xp_boost', value: 0.15, stat: Stat.INT }
+    },
+    {
+        id: 'artifact_hercules_belt',
+        title: 'Hercules Belt',
+        description: 'Passive: +15% Strength XP.',
+        cost: 1500,
+        type: 'artifact',
+        icon: 'Dumbbell',
+        isInfinite: false,
+        effect: { type: 'xp_boost', value: 0.15, stat: Stat.STR }
+    },
+    {
+        id: 'artifact_zen_incense',
+        title: 'Zen Incense',
+        description: 'Passive: +20% Spirit XP.',
+        cost: 1800,
+        type: 'artifact',
+        icon: 'Wind',
+        isInfinite: false,
+        effect: { type: 'xp_boost', value: 0.20, stat: Stat.SPR }
+    },
+    {
+        id: 'artifact_comm_link',
+        title: 'Neural Comm-Link',
+        description: 'Passive: +20% Relations XP.',
+        cost: 1800,
+        type: 'artifact',
+        icon: 'Radio',
+        isInfinite: false,
+        effect: { type: 'xp_boost', value: 0.20, stat: Stat.REL }
+    },
+    {
+        id: 'artifact_gilded_vault',
+        title: 'Gilded Vault',
+        description: 'Passive: +20% Finance XP.',
+        cost: 2000,
+        type: 'artifact',
+        icon: 'Briefcase',
+        isInfinite: false,
+        effect: { type: 'xp_boost', value: 0.20, stat: Stat.FIN }
+    },
+    {
+        id: 'cosmetic_border_neon',
+        title: 'Neon Pulse Border',
+        description: 'A glowing cyan border for your profile card.',
+        cost: 1200,
+        type: 'cosmetic',
+        icon: 'Square',
+        isInfinite: false
+    },
+    {
+        id: 'cosmetic_bg_nebula',
+        title: 'Nebula Flow BG',
+        description: 'An animated space background for your profile.',
+        cost: 1500,
+        type: 'cosmetic',
+        icon: 'Image',
+        isInfinite: false
+    },
+    {
+        id: 'cosmetic_prefix_legendary',
+        title: 'Legendary Prefix',
+        description: 'Adds "LEGENDARY" before your name.',
+        cost: 2000,
+        type: 'cosmetic',
+        icon: 'Type',
+        isInfinite: false
+    },
+    {
+        id: 'cosmetic_glitch',
+        title: 'Glitch Protocol',
+        description: 'Adds a digital glitch effect to your profile.',
+        cost: 1800,
+        type: 'cosmetic',
+        icon: 'Zap',
+        isInfinite: false
+    },
+    {
+        id: 'cosmetic_prefix_exalted',
+        title: 'Exalted Prefix',
+        description: 'Adds "EXALTED" before your name.',
+        cost: 5000,
+        type: 'cosmetic',
+        icon: 'Crown',
+        isInfinite: false
+    }
 ];
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -47,24 +214,43 @@ const migrateShopState = (data: any): { storeItems: StoreItem[] } => {
     const seenIds = new Set();
     const uniqueItems: StoreItem[] = [];
     for (const item of rawItems) {
+        // Remove old generic shield
+        if (item.id === 'item_shield') continue;
+
         if (!seenIds.has(item.id)) {
             seenIds.add(item.id);
+            if (item.id === 'item_shield_easy') item.cost = 250;
+            if (item.id === 'item_shield_normal') item.cost = 500;
+            if (item.id === 'item_shield_hard') item.cost = 1000;
             uniqueItems.push(item);
         }
     }
+
+    // Ensure new shields, battery, and ZEUS are present
+    const newSystemItems = ['item_shield_easy', 'item_shield_normal', 'item_shield_hard', 'item_battery', 'avatar_zeus'];
+    for (const itemId of newSystemItems) {
+        if (!seenIds.has(itemId)) {
+            const systemItem = INITIAL_STOCK.find(i => i.id === itemId);
+            if (systemItem) {
+                uniqueItems.push(systemItem);
+                seenIds.add(itemId);
+            }
+        }
+    }
+
     return {
         storeItems: uniqueItems.length > 0 ? uniqueItems : INITIAL_STOCK
     };
 };
 
 export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { user } = lifeState;
     const soundEnabled = user.preferences.soundEnabled;
 
     // 🟢 USE PERSISTENCE HOOK
     const [state, setState] = usePersistence<{ storeItems: StoreItem[] }>(
-        'LIFE_OS_SHOP_DATA',
+        'ASCENSION_SHOP_DATA',
         { storeItems: INITIAL_STOCK },
         'shop_data',
         migrateShopState
@@ -103,12 +289,23 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return false;
         }
 
-        if (itemId === 'item_shield' && user.shields >= 3) {
-            lifeDispatch.addToast('🛡️ Max Shield Capacity (3) Reached', 'error');
+        if (itemId === 'item_shield_easy' && user.shields.easy >= 3) {
+            lifeDispatch.addToast('🛡️ Max Easy Shield Capacity (3) Reached', 'error');
             playSound('error', soundEnabled);
             return false;
         }
-        if ((item.type === 'system' || item.type === 'artifact') && !item.isInfinite && user.inventory.includes(itemId)) {
+        if (itemId === 'item_shield_normal' && user.shields.normal >= 3) {
+            lifeDispatch.addToast('🛡️ Max Normal Shield Capacity (3) Reached', 'error');
+            playSound('error', soundEnabled);
+            return false;
+        }
+        if (itemId === 'item_shield_hard' && user.shields.hard >= 3) {
+            lifeDispatch.addToast('🛡️ Max Hard Shield Capacity (3) Reached', 'error');
+            playSound('error', soundEnabled);
+            return false;
+        }
+
+        if ((item.type === 'system' || item.type === 'artifact' || item.type === 'avatar') && !item.isInfinite && user.inventory.includes(itemId)) {
             lifeDispatch.addToast('Already Owned', 'error');
             return false;
         }
@@ -116,20 +313,21 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const newGold = user.gold - item.cost;
         const updates: any = { gold: newGold };
         
-        if (itemId === 'item_shield') {
-            updates.shields = user.shields + 1;
-            lifeDispatch.addToast(`Shield Acquired! (${updates.shields}/3)`, 'info');
-        } 
-        else if (item.type === 'redemption') {
-            const { updatedLog, newAverage, redeemedDate } = redeemLowestScore(user.honorDailyLog, lifeState.ui.debugDate);
-            if (!redeemedDate) {
-                lifeDispatch.addToast('Honor is already perfect.', 'info');
-                return false;
-            }
-            updates.honorDailyLog = updatedLog;
-            updates.honor = newAverage;
-            lifeDispatch.addToast(`Honor Restored for ${redeemedDate} (+100%)`, 'level-up');
-            playSound('level-up', soundEnabled);
+        if (itemId === 'item_shield_easy') {
+            updates.shields = { ...user.shields, easy: user.shields.easy + 1 };
+            lifeDispatch.addToast(`Easy Shield Acquired! (${updates.shields.easy}/3)`, 'info');
+        } else if (itemId === 'item_shield_normal') {
+            updates.shields = { ...user.shields, normal: user.shields.normal + 1 };
+            lifeDispatch.addToast(`Normal Shield Acquired! (${updates.shields.normal}/3)`, 'info');
+        } else if (itemId === 'item_shield_hard') {
+            updates.shields = { ...user.shields, hard: user.shields.hard + 1 };
+            lifeDispatch.addToast(`Hard Shield Acquired! (${updates.shields.hard}/3)`, 'info');
+        }
+        else if (item.type === 'avatar') {
+            updates.unlockedAvatars = [...user.unlockedAvatars, itemId];
+            updates.avatarId = itemId;
+            updates.inventory = [...user.inventory, itemId];
+            lifeDispatch.addToast(`Avatar Unlocked: ${item.title}`, 'success');
         }
         else if (item.type === 'system' && !item.isInfinite) {
             updates.inventory = [...user.inventory, itemId];
@@ -171,12 +369,24 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
              lifeDispatch.addToast(`Artifact Acquired: ${item.title}`, 'success');
              setTimeout(() => lifeDispatch.addToast("Equip it in Profile to activate.", 'info'), 1500);
 
+        } else if (item.type === 'cosmetic') {
+            const cosmetics = { ...user.profileCosmetics };
+            if (item.id.includes('border')) cosmetics.borderId = item.id.replace('cosmetic_border_', '');
+            if (item.id.includes('bg')) cosmetics.backgroundId = item.id.replace('cosmetic_bg_', '');
+            if (item.id.includes('prefix')) {
+                cosmetics.titlePrefixId = item.id.replace('cosmetic_prefix_', '');
+            }
+            if (item.id === 'cosmetic_glitch') cosmetics.glitchEffect = true;
+
+            updates.profileCosmetics = cosmetics;
+            updates.inventory = [...user.inventory, itemId];
+            lifeDispatch.addToast(`Cosmetic Activated: ${item.title}`, 'success');
         } else if (item.id === 'item_potion_xp') {
              updates.inventory = [...user.inventory, itemId]; 
              lifeDispatch.addToast('Potion stored in Inventory', 'success');
         } else if (item.id === 'item_battery') {
-             updates.shields = 3;
-             lifeDispatch.addToast('Shields Fully Recharged!', 'level-up');
+             updates.shields = { easy: 3, normal: 3, hard: 3 };
+             lifeDispatch.addToast('All Shields Fully Recharged!', 'level-up');
         } else {
             updates.inventory = [...user.inventory, itemId];
             lifeDispatch.addToast(`Voucher Acquired: ${item.title}`, 'success');
@@ -193,10 +403,6 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         lifeDispatch.updateUser(updates);
         playSound('coin', soundEnabled);
-
-        if (!item.isInfinite) {
-            setState(prev => ({ ...prev, storeItems: prev.storeItems.filter(i => i.id !== itemId) }));
-        }
         
         return true; 
     };
@@ -253,10 +459,27 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lifeDispatch.addToast('Market Restored', 'success');
     };
 
+    const getItemLimitInfo = (itemId: string): { current: number; max: number | null } => {
+        if (itemId === 'item_shield_easy') return { current: user.shields.easy, max: 3 };
+        if (itemId === 'item_shield_normal') return { current: user.shields.normal, max: 3 };
+        if (itemId === 'item_shield_hard') return { current: user.shields.hard, max: 3 };
+        
+        const item = storeItems.find(i => i.id === itemId);
+        if (item && !item.isInfinite) {
+            const isOwned = user.inventory.includes(itemId) || 
+                            user.unlockedAvatars.includes(itemId) || 
+                            user.equippedItems.includes(itemId);
+            return { current: isOwned ? 1 : 0, max: 1 };
+        }
+        
+        return { current: 0, max: null };
+    };
+
     return (
         <ShopContext.Provider value={{ 
             shopState: { storeItems }, 
-            shopDispatch: { buyItem, addStoreItem, addStoreItems, deleteStoreItem, restoreData } 
+            shopDispatch: { buyItem, addStoreItem, addStoreItems, deleteStoreItem, restoreData },
+            getItemLimitInfo
         }}>
             {children}
         </ShopContext.Provider>

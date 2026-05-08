@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { BadgeDefinition, BadgeTier, BadgeProgress } from '../types/badgeTypes';
 import { BADGE_DATABASE } from '../data/badgeData'; // قاعدة البيانات في مجلد data
-import { useLifeOS } from './LifeOSContext'; // ملف مجاور (نفس المجلد)
+import { useAscension } from './AscensionContext'; // ملف مجاور (نفس المجلد)
 import { useSkills } from './SkillContext';   // ملف مجاور (نفس المجلد)
 import { useHabits } from './HabitContext';   // 👈 Import Habits
 import { useRaids } from './RaidContext';     // 👈 NEW: Import Raids
@@ -24,7 +24,7 @@ const generateTimeCode = (): string => {
 };
 
 export const BadgeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state, dispatch } = useLifeOS();
+    const { state, dispatch } = useAscension();
     const { skillState } = useSkills(); 
     const { habitState } = useHabits();
     const { raidState } = useRaids(); // 👈 Access Raids
@@ -97,6 +97,11 @@ export const BadgeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     // Use progress % as metric (0-100)
                     currentValue = targetRaid.progress;
                 }
+            }
+            // 🧠 SKILL COUNT LOGIC (NEW)
+            else if (badge.triggerType === 'skill_count' && badge.metricKey) {
+                const threshold = parseInt(badge.metricKey);
+                currentValue = skillState.skills.filter(s => s.level >= threshold).length;
             }
 
             // 2. Check Levels

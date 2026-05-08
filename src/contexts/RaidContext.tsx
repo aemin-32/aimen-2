@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Raid, RaidStep } from '../types/raidTypes';
 import { Difficulty, Stat, LootPayload } from '../types/types';
-import { useLifeOS } from './LifeOSContext';
+import { useAscension } from './AscensionContext';
 import { useSkills } from './SkillContext';
 import { playSound } from '../utils/audio';
 import { REWARDS } from '../types/constants';
@@ -32,7 +32,7 @@ interface RaidContextType {
     };
 }
 
-const STORAGE_KEY_RAIDS = 'LIFE_OS_RAIDS_DATA';
+const STORAGE_KEY_RAIDS = 'ASCENSION_RAIDS_DATA';
 
 const RaidContext = createContext<RaidContextType | undefined>(undefined);
 
@@ -60,13 +60,13 @@ const migrateRaidState = (data: any): { raids: Raid[] } => {
 };
 
 export const RaidProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills();
     const soundEnabled = lifeState.user.preferences.soundEnabled;
 
     // 🟢 USE PERSISTENCE HOOK
     const [state, setState] = usePersistence<{ raids: Raid[] }>(
-        'LIFE_OS_RAIDS_DATA',
+        'ASCENSION_RAIDS_DATA',
         { raids: [] },
         'raids_data',
         migrateRaidState

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { LifeOSState } from '../../types/types';
+import { AscensionState } from '../../types/types';
 import { setSoundPack, setCustomSounds } from '../../utils/audio';
 
-export const useThemeManager = (state: LifeOSState) => {
+export const useThemeManager = (state: AscensionState) => {
     useEffect(() => {
         const currentThemeId = state.user.preferences.theme;
         const themeData = state.user.unlockedThemes.find(t => t.id === currentThemeId) || state.user.unlockedThemes[0];

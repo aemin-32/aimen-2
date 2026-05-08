@@ -1,19 +1,19 @@
 
 import { Habit, DailyStatus, HabitCategory } from '../../types/habitTypes';
 import { Difficulty, Stat, Reminder } from '../../types/types';
-import { useLifeOS } from '../LifeOSContext';
+import { useAscension } from '../AscensionContext';
 import { useSkills } from '../SkillContext';
 import { checkHabitActive, calculateFall } from '../../utils/habitEngine';
 import { playSound } from '../../utils/audio';
 import { calculateTaskReward } from '../../utils/economyEngine';
-import { calculateMonthlyAverage, calculateDailyHonorPenalty } from '../../utils/honorSystem';
+import { dispatchDataBurst } from '../../components/effects/DataBurst';
 
 export const useHabitActions = (
     state: { habits: Habit[], categories: HabitCategory[] },
     setState: React.Dispatch<React.SetStateAction<{ habits: Habit[], categories: HabitCategory[] }>>,
     soundEnabled: boolean
 ) => {
-    const { state: lifeState, dispatch: lifeDispatch } = useLifeOS();
+    const { state: lifeState, dispatch: lifeDispatch } = useAscension();
     const { skillDispatch, skillState } = useSkills();
 
     const addHabit = (habitData: Omit<Habit, 'id' | 'streak' | 'status' | 'history' | 'checkpoint' | 'bestStreak' | 'createdAt'>) => {
@@ -88,6 +88,12 @@ export const useHabitActions = (
             }
 
             let rewards = calculateTaskReward(habit.difficulty, lifeState.user.currentMode);
+            
+            // 🏎️ SYSTEM ASCENDING MULTIPLIER
+            if (lifeState.ui.systemAscending.isActive) {
+                rewards.xp *= 2;
+            }
+
             const roll = Math.random();
             if (roll > 0.95) {
                 rewards.xp *= 2;
@@ -113,10 +119,22 @@ export const useHabitActions = (
                 dailyXP: lifeState.user.dailyXP + rewards.xp,
                 gold: lifeState.user.gold + rewards.gold,
                 stats: newStats,
-                metrics: { ...lifeState.user.metrics, habitsFixed: lifeState.user.metrics.habitsFixed + 1 }
+                metrics: { 
+                    ...lifeState.user.metrics, 
+                    habitsFixed: lifeState.user.metrics.habitsFixed + 1,
+                    habitsByDifficulty: {
+                        ...lifeState.user.metrics.habitsByDifficulty,
+                        [habit.difficulty]: (lifeState.user.metrics.habitsByDifficulty[habit.difficulty] || 0) + 1
+                    }
+                }
             });
 
             if (habit.skillId) skillDispatch.addSkillXP(habit.skillId, Math.ceil(rewards.xp * 0.5));
+
+            // 🚀 PARTICLE EXPLOSION
+            dispatchDataBurst();
+
+            lifeDispatch.registerCompletion('easy');
 
             setState(prev => ({ ...prev, habits: prev.habits.map(h => h.id === habitId ? { 
                 ...h, status, streak: newStreak, history: newHistory,
@@ -129,13 +147,6 @@ export const useHabitActions = (
         } else if (status === 'failed') {
             newStreak = calculateFall(habit.streak);
             soundToPlay = 'error';
-            const penaltyPercent = calculateDailyHonorPenalty(habit.difficulty);
-            const todayIso = lifeState.ui.debugDate ? new Date(lifeState.ui.debugDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            const currentDailyHonor = lifeState.user.honorDailyLog[todayIso] !== undefined ? lifeState.user.honorDailyLog[todayIso] : 100;
-            const newDailyHonor = Math.max(0, currentDailyHonor - penaltyPercent); 
-            const updatedLog = { ...lifeState.user.honorDailyLog, [todayIso]: newDailyHonor };
-            const newAverage = calculateMonthlyAverage(updatedLog, lifeState.ui.debugDate);
-            lifeDispatch.updateUser({ honorDailyLog: updatedLog, honor: newAverage });
             lifeDispatch.addToast(`${habit.title} Failed`, 'error');
             
             setState(prev => ({ ...prev, habits: prev.habits.map(h => h.id === habitId ? { 
