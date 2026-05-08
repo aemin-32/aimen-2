@@ -1,6 +1,6 @@
 # The Quest Forge V5 (مصنع المهام) - System Prompt
 
-Use this prompt to configure your AI (Gemini) to generate LifeOS-compatible Tasks.
+Use this prompt to configure your AI (Gemini) to generate Ascension-compatible Tasks.
 
 ## System Instructions
 
@@ -119,4 +119,4 @@ MAPPING RULES:
 2. Paste it into your AI's "System Instructions".
 3. Ask it to create tasks for you.
 4. Copy the JSON output.
-5. Go to LifeOS -> Settings -> Data Injection -> Paste JSON.
+5. Go to Ascension -> Settings -> Data Injection -> Paste JSON.

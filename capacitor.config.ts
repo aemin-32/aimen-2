@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.lifeos.app',
-  appName: 'LifeOS',
+  appName: 'Ascension',
   webDir: 'dist',
   server: {    url: 'https://zayn-os.netlify.app',
     cleartext: true
